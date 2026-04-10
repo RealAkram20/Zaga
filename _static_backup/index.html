@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zaga Technologies</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="images/zz.png">
+    <link rel="apple-touch-icon" href="images/zz.png">
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <p><img class="logo" src="images/logo.png"></p>
+            </div>
+            <button class="menu-toggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="search-bar-container">
+                <input type="text" id="searchInput" class="search-bar" placeholder="Search products...">
+                <button id="searchBtn" class="search-btn">Search</button>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link active">Home</a>
+                <a href="shop.html" class="nav-link">Shop</a>
+                <a href="about.html" class="nav-link active">About Us</a>
+                <a href="admin.html" class="nav-link admin-link">Admin</a>
+                <a href="cart.html" class="nav-link cart-link">Cart <span id="cartCount">0</span></a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Zaga Tech Credit</h2>
+            <h3>Financing Digital Empowerment!</h3>
+            <p>Buy Now & Pay Later</p>
+            <a href="shop.html" class="hero-btn">Apply Now</a>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories-section">
+        <div class="container">
+            <h2>Own Now & Pay Later</h2>
+            <div class="categories-grid">
+                <div class="category-card" onclick="filterByCategory('Laptops')">
+                    <div class="category-icon">💻</div>
+                    <h3>Laptops</h3>
+                </div>
+                <div class="category-card" onclick="filterByCategory('Desktops')">
+                    <div class="category-icon">🖥️</div>
+                    <h3>Desktops</h3>
+                </div>
+                <div class="category-card" onclick="filterByCategory('Smartphones & Tablets')">
+                    <div class="category-icon">📱</div>
+                    <h3>Smartphones & Tablets</h3>
+                </div>
+                <div class="category-card" onclick="filterByCategory('Accessories')">
+                    <div class="category-icon">🎧</div>
+                    <h3>Accessories</h3>
+                </div>
+                <div class="category-card" onclick="filterByCategory('Printers')">
+                    <div class="category-icon">🖨️</div>
+                    <h3>Printers</h3>
+                </div>
+                <div class="category-card" onclick="filterByCategory('Networking hardware')">
+                    <div class="category-icon">🌐</div>
+                    <h3>Networking hardware</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products Section -->
+    <section class="featured-section">
+        <div class="container">
+            <h2>Featured Products</h2>
+            <div id="featuredProducts" class="products-grid">
+                <!-- Products will be loaded here by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Offline Courses for Students Section -->
+    <section class="courses-section">
+        <div class="container">
+            <h2>Offline Courses for Students</h2>
+
+            <!-- Digital Skilling Courses Subsection -->
+            <h3 style="margin-top: 40px; margin-bottom: 20px; color: #1f2937; font-size: 24px;">Digital Skilling Courses
+            </h3>
+            <div class="products-grid">
+                <div class="product-card">
+                    <div class="product-image" aria-hidden="true" style="font-size:32px;">
+                        <span>🖥️</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Basic Computer Literacy</h3>
+                        <p class="description">Master essential computer operations, file management, and safe browsing.
+                        </p>
+                        <div class="price-section">
+                            <span class="price">UGX 200,000</span>
+                        </div>
+                        <div class="actions">
+                            <a href="basic-computer-literacy.html" class="btn-primary">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image" aria-hidden="true" style="font-size:32px;">
+                        <span>📝</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Microsoft Office Essentials</h3>
+                        <p class="description">Excel, Word, and PowerPoint for business productivity and reporting.</p>
+                        <div class="price-section">
+                            <span class="price">UGX 200,000</span>
+                        </div>
+                        <div class="actions">
+                            <a href="microsoft-office-essentials.html" class="btn-primary">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image" aria-hidden="true" style="font-size:32px;">
+                        <span>🎨</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Graphic Design Fundamentals</h3>
+                        <p class="description">Intro to design principles using Canva and Adobe Express.</p>
+                        <div class="price-section">
+                            <span class="price">UGX 200,000</span>
+                        </div>
+                        <div class="actions">
+                            <a href="about.html" class="btn-primary">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image" aria-hidden="true" style="font-size:32px;">
+                        <span>🌐</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Web Development Basics</h3>
+                        <p class="description">Build your first web pages with HTML, CSS, and a touch of JS.</p>
+                        <div class="price-section">
+                            <span class="price">UGX 200,000</span>
+                        </div>
+                        <div class="actions">
+                            <a href="about.html" class="btn-primary">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image" aria-hidden="true" style="font-size:32px;">
+                        <span>🔐</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Cybersecurity Awareness</h3>
+                        <p class="description">Protect your data: passwords, phishing, backups, and device safety.</p>
+                        <div class="price-section">
+                            <span class="price">UGX 200,000</span>
+                        </div>
+                        <div class="actions">
+                            <a href="about.html" class="btn-primary">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image" aria-hidden="true" style="font-size:32px;">
+                        <span>🛠️</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>PC Maintenance & Networking</h3>
+                        <p class="description">Hardware basics, device cleanup, and small office networking.</p>
+                        <div class="price-section">
+                            <span class="price">UGX 200,000</span>
+                        </div>
+                        <div class="actions">
+                            <a href="about.html" class="btn-primary">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entrepreneurship Courses Subsection -->
+            <h3 style="margin-top: 60px; margin-bottom: 20px; color: #1f2937; font-size: 24px;">Entrepreneurship Courses
+            </h3>
+            <div class="products-grid">
+                <div class="product-card">
+                    <div class="product-image" aria-hidden="true" style="font-size:32px;">
+                        <span>💼</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Business Planning Essentials</h3>
+                        <p class="description">Learn to create effective business plans and strategies.</p>
+                        <div class="price-section">
+                            <span class="price">UGX 250,000</span>
+                        </div>
+                        <div class="actions">
+                            <a href="about.html" class="btn-primary">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image" aria-hidden="true" style="font-size:32px;">
+                        <span>📊</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Financial Management</h3>
+                        <p class="description">Master budgeting, accounting, and financial planning for your business.
+                        </p>
+                        <div class="price-section">
+                            <span class="price">UGX 250,000</span>
+                        </div>
+                        <div class="actions">
+                            <a href="about.html" class="btn-primary">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image" aria-hidden="true" style="font-size:32px;">
+                        <span>📱</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Digital Marketing Fundamentals</h3>
+                        <p class="description">Social media, SEO, and online advertising strategies for growth.</p>
+                        <div class="price-section">
+                            <span class="price">UGX 250,000</span>
+                        </div>
+                        <div class="actions">
+                            <a href="about.html" class="btn-primary">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>About Us</h3>
+                    <p><a href="#">How it works</a></p>
+                    <p><a href="#">Our Partners</a></p>
+                    <p><a href="about.html#testimonials-heading">Financed success stories</a></p>
+                    <p><a href="#">FAQs</a></p>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Payment Terms</h3>
+                    <p><a href="https://wa.me/256700706809" target="_blank">Apply Now</a></p>
+                    <p><a href="#">Terms & Conditions</a></p>
+                    <p><a href="https://wa.me/256700706809" target="_blank">Delivery Tracking</a></p>
+                    <p><a href="#">Privacy Policy</a></p>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Contact Us</h3>
+                    <p>Address: Kabaka Kintu House Level 1 Shop no C-03 Kampala Road-Kampaka-Uganda</p>
+                    <p>Email: sales2.zagatechnologiesltd@gmail.com</p>
+                    <p>Phone: +256 700 706809</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Zaga Technologies Ltd. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Load featured products on home page
+        window.addEventListener('DOMContentLoaded', function () {
+            displayFeaturedProducts();
+        });
+
+        function displayFeaturedProducts() {
+            const featured = products.slice(0, 8);
+            const container = document.getElementById('featuredProducts');
+            container.innerHTML = featured.map(product => `
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="${product.image}" alt="${product.title}">
+                        ${product.discount ? `<span class="discount-badge">${product.discount}% OFF</span>` : ''}
+                    </div>
+                    <div class="product-info">
+                        <h3>${product.title}</h3>
+                        <div class="rating">
+                            <span class="stars">${getStars(product.rating)}</span>
+                            <span class="rating-value">${product.rating} (${product.reviews})</span>
+                        </div>
+                        <p class="description">${product.description.substring(0, 80)}...</p>
+                        <div class="price-section">
+                            <span class="price">${formatPrice(product.price)}</span>
+                        </div>
+                        <div class="actions">
+                            <button onclick="viewProduct(${product.id})" class="btn-primary">View Details</button>
+                            <button onclick="addToCart(${product.id})" class="btn-secondary">Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterByCategory(category) {
+            sessionStorage.setItem('selectedCategory', category);
+            window.location.href = 'shop.html';
+        }
+
+        function viewProduct(id) {
+            sessionStorage.setItem('productId', id);
+            window.location.href = 'product-detail.html';
+        }
+    </script>
+</body>
+
+</html>
