@@ -543,8 +543,8 @@ require_once __DIR__ . '/../includes/header.php';
                         .catch(function(err) { console.warn('Account registration failed:', err); });
                 }
 
-                // Build WhatsApp redirect
-                var siteBase = window.location.origin + '/Zaga';
+                // Build WhatsApp redirect (SITE_URL is injected by includes/footer.php)
+                var siteBase = window.location.origin + (window.SITE_URL || '');
                 var isAdmin = <?php echo (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) ? 'true' : 'false'; ?>;
                 var isLoggedIn = <?php echo is_logged_in() ? 'true' : 'false'; ?>;
 

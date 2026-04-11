@@ -28,10 +28,16 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../config/database.php';
 
 // --- Site constants ---
-// Set APP_BASE in .env for production (e.g. APP_BASE= for root, APP_BASE=/Zaga for subdirectory)
-// Falls back to /Zaga for local development
+// APP_BASE must be a PATH prefix only (e.g. "" for root domain, "/Zaga"
+// for a subdirectory). Users sometimes paste a full URL by mistake, so
+// we strip any scheme+host and keep only the path portion. Trailing
+// slashes are removed so every caller can safely do SITE_URL . '/route'.
 $_appBase = getenv('APP_BASE');
 if ($_appBase === false) $_appBase = '/Zaga';
+$_appBase = trim((string)$_appBase);
+if (preg_match('~^https?://[^/]+(/.*)?$~i', $_appBase, $m)) {
+    $_appBase = $m[1] ?? '';
+}
 define('SITE_URL', rtrim($_appBase, '/'));
 define('SITE_NAME', 'Zaga Technologies');
 define('SITE_VERSION', '2.0.0');
