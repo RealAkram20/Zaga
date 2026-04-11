@@ -1,7 +1,6 @@
 <?php
-session_start();
 header('Content-Type: application/json');
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/notifications.php';
 
 // CSRF token generation and validation
@@ -51,6 +50,11 @@ switch ($action) {
         break;
 
     case 'logout':
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $p = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+        }
         session_destroy();
         echo json_encode(['success' => true, 'message' => 'Logged out']);
         break;

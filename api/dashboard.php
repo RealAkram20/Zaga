@@ -1,7 +1,6 @@
 <?php
-session_start();
 header('Content-Type: application/json');
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/config.php';
 
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);

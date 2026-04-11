@@ -3,7 +3,7 @@
 // Centralized JavaScript for all admin CRUD operations
 // ============================================================
 
-const SITE_URL = window.SITE_URL || '/Zaga';
+if (typeof window.SITE_URL === 'undefined') window.SITE_URL = '/Zaga';
 
 // Ensure all fetch calls include session cookies
 (function() {
@@ -432,7 +432,7 @@ function selectGalleryImage(path) {
 
 async function loadDashboard() {
     try {
-        const res = await fetch(API.dashboard);
+        const res = await fetch(API.dashboard, { cache: 'no-store' });
         const json = await res.json();
         if (!json.success) {
             console.warn('Dashboard API error:', json.message);
@@ -468,7 +468,7 @@ async function loadDashboard() {
 
 async function loadRecentOrders() {
     try {
-        const res = await fetch(API.orders + '?action=list');
+        const res = await fetch(API.orders + '?action=list', { cache: 'no-store' });
         const json = await res.json();
         if (!json.success) return;
 
@@ -503,7 +503,7 @@ async function loadRecentOrders() {
 
 async function loadProducts() {
     try {
-        const res = await fetch(API.products + '?action=list');
+        const res = await fetch(API.products + '?action=list', { cache: 'no-store' });
         const json = await res.json();
         if (!json.success) return;
         allProducts = json.data;
@@ -731,7 +731,7 @@ async function deleteProduct(id) {
 
 async function loadCategories() {
     try {
-        const res = await fetch(API.categories + '?action=list');
+        const res = await fetch(API.categories + '?action=list', { cache: 'no-store' });
         const json = await res.json();
         if (!json.success) return;
         allCategories = json.data;
@@ -878,7 +878,7 @@ async function deleteCategory(id) {
 
 async function loadDigitalCourses() {
     try {
-        const res = await fetch(API.courses + '?action=list&type=digital_skilling');
+        const res = await fetch(API.courses + '?action=list&type=digital_skilling', { cache: 'no-store' });
         const json = await res.json();
         if (!json.success) return;
         allDigitalCourses = json.data;
@@ -890,7 +890,7 @@ async function loadDigitalCourses() {
 
 async function loadEntreprenCourses() {
     try {
-        const res = await fetch(API.courses + '?action=list&type=entrepreneurship');
+        const res = await fetch(API.courses + '?action=list&type=entrepreneurship', { cache: 'no-store' });
         const json = await res.json();
         if (!json.success) return;
         allEntreprenCourses = json.data;
@@ -1070,7 +1070,7 @@ async function openEnrollCourseModal(courseId, courseTitle, coursePrice) {
     // Fetch customers
     let customerOpts = '<option value="">-- Select Customer --</option>';
     try {
-        const custRes = await fetch(API.customers + '?action=list');
+        const custRes = await fetch(API.customers + '?action=list', { cache: 'no-store' });
         const custJson = await custRes.json();
         if (custJson.success && custJson.data) {
             customerOpts += custJson.data.map(c =>
@@ -1171,7 +1171,7 @@ async function deleteCourse(id) {
 
 async function loadOrders() {
     try {
-        const res = await fetch(API.orders + '?action=list');
+        const res = await fetch(API.orders + '?action=list', { cache: 'no-store' });
         const json = await res.json();
         if (!json.success) return;
         allOrders = json.data;
@@ -1426,7 +1426,7 @@ async function openEditOrderModal(id) {
         // Fetch customers for assignment dropdown
         let customerOpts = '<option value="">-- No customer assigned --</option>';
         try {
-            const custRes = await fetch(API.customers + '?action=list');
+            const custRes = await fetch(API.customers + '?action=list', { cache: 'no-store' });
             const custJson = await custRes.json();
             if (custJson.success && custJson.data) {
                 customerOpts += custJson.data.map(c =>
@@ -1516,7 +1516,7 @@ async function deleteOrder(id) {
 
 async function loadCustomers() {
     try {
-        const res = await fetch(API.customers + '?action=list');
+        const res = await fetch(API.customers + '?action=list', { cache: 'no-store' });
         const json = await res.json();
         if (!json.success) return;
         allCustomers = json.data;
@@ -1679,7 +1679,7 @@ async function deleteCustomer(id) {
 
 async function loadReviews() {
     try {
-        const res = await fetch(API.reviews + '?action=list_all');
+        const res = await fetch(API.reviews + '?action=list_all', { cache: 'no-store' });
         const json = await res.json();
         if (!json.success) return;
         allReviews = json.data;
@@ -1933,7 +1933,7 @@ async function deleteReview(id) {
 
 async function loadTestimonials() {
     try {
-        const res = await fetch(API.testimonials + '?action=list_all');
+        const res = await fetch(API.testimonials + '?action=list_all', { cache: 'no-store' });
         const json = await res.json();
         if (!json.success) return;
         allTestimonials = json.data;
@@ -2165,8 +2165,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async (e) => {
             e.preventDefault();
-            await fetch(API.auth + '?action=logout');
-            window.location.href = SITE_URL + '/admin/login';
+            try {
+                const res = await fetch(API.auth + '?action=logout', { cache: 'no-store' });
+                await res.json();
+            } catch (err) {
+                // Even if fetch fails, still redirect to login
+            }
+            // Clear any cached state
+            window.location.replace(SITE_URL + '/admin/login');
         });
     }
 });

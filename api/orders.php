@@ -1,7 +1,6 @@
 <?php
-session_start();
 header('Content-Type: application/json');
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/notifications.php';
 
 $action = $_REQUEST['action'] ?? 'list';

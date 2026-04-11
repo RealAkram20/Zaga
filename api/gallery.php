@@ -1,7 +1,6 @@
 <?php
-session_start();
 header('Content-Type: application/json');
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/config.php';
 
 // All gallery actions require admin auth
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {

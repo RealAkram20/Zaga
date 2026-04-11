@@ -27,20 +27,12 @@ if (session_status() === PHP_SESSION_NONE) {
 // --- Include database configuration ---
 require_once __DIR__ . '/../config/database.php';
 
-// --- Site constants (dynamic SITE_URL) ---
-// Detect base path: set APP_BASE in .env or auto-detect from script path
-$_appBase = getenv('APP_BASE') ?: rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
-// For files in subdirectories (pages/, account/, api/) we need the project root
-// If script is in a subdirectory, walk up to the project root
-$_docRoot = realpath(__DIR__ . '/..');
-$_scriptDir = realpath(dirname($_SERVER['SCRIPT_FILENAME']));
-if ($_scriptDir && $_docRoot && strpos($_scriptDir, $_docRoot) === 0) {
-    $_webRoot = str_replace('\\', '/', substr($_docRoot, strlen($_SERVER['DOCUMENT_ROOT'])));
-    $_appBase = '/' . trim($_webRoot, '/');
-}
-if ($_appBase === '/' || $_appBase === '') $_appBase = '';
-
-define('SITE_URL', $_appBase);
+// --- Site constants ---
+// Set APP_BASE in .env for production (e.g. APP_BASE= for root, APP_BASE=/Zaga for subdirectory)
+// Falls back to /Zaga for local development
+$_appBase = getenv('APP_BASE');
+if ($_appBase === false) $_appBase = '/Zaga';
+define('SITE_URL', rtrim($_appBase, '/'));
 define('SITE_NAME', 'Zaga Technologies');
 define('SITE_VERSION', '2.0.0');
 
