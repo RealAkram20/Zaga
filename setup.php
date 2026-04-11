@@ -25,14 +25,26 @@ a.btn:hover{background:#1d4ed8;}
 </style></head><body>";
 echo "<h1>Zaga Technologies - Database Setup</h1>";
 
-// Step 1: Connect to MySQL using .env credentials
+// Step 1: Connect to MySQL using .env credentials.
 // On shared hosting (cPanel), the database is pre-created and the MySQL user
-// is scoped to it — so we connect directly to the target DB, we do NOT try
-// to CREATE DATABASE (that would require SUPER privileges we don't have).
-$conn = @new mysqli($host, $user, $pass, $dbName);
+// is scoped to it — connect directly to the target DB, do NOT try to
+// CREATE DATABASE (that requires SUPER, not granted on shared hosting).
+// PHP 8.1+ makes mysqli throw exceptions by default on connect failure,
+// so we disable that and handle errors manually.
+mysqli_report(MYSQLI_REPORT_OFF);
+try {
+    $conn = @new mysqli($host, $user, $pass, $dbName);
+} catch (Throwable $e) {
+    echo "<div class='box'><p class='err'>Connection failed: " . htmlspecialchars($e->getMessage()) . "</p>";
+    echo "<p>DB_HOST=<code>" . htmlspecialchars($host) . "</code> DB_USER=<code>" . htmlspecialchars($user) . "</code> DB_NAME=<code>" . htmlspecialchars($dbName) . "</code></p>";
+    echo "<p>Check your <code>.env</code>, and make sure the MySQL user is attached to the database in cPanel &rarr; MySQL Databases &rarr; Add User To Database (tick ALL PRIVILEGES).</p>";
+    echo "</div></body></html>";
+    exit;
+}
 if ($conn->connect_error) {
     echo "<div class='box'><p class='err'>Connection failed: " . htmlspecialchars($conn->connect_error) . "</p>";
-    echo "<p>Check your <code>.env</code> values for DB_HOST, DB_USER, DB_PASS, DB_NAME, and that the MySQL user is attached to the database in cPanel &rarr; MySQL Databases &rarr; Add User To Database.</p>";
+    echo "<p>DB_HOST=<code>" . htmlspecialchars($host) . "</code> DB_USER=<code>" . htmlspecialchars($user) . "</code> DB_NAME=<code>" . htmlspecialchars($dbName) . "</code></p>";
+    echo "<p>Check your <code>.env</code>, and make sure the MySQL user is attached to the database in cPanel &rarr; MySQL Databases &rarr; Add User To Database (tick ALL PRIVILEGES).</p>";
     echo "</div></body></html>";
     exit;
 }

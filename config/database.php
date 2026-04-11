@@ -28,18 +28,23 @@ define('DB_NAME', getenv('DB_NAME') ?: 'zaga_db');
 define('ADMIN_DEFAULT_PASSWORD', getenv('ADMIN_DEFAULT_PASSWORD') ?: 'ZagaAdmin2025!');
 
 function getDbConnection() {
-    // First connect without selecting a database to check/create it
-    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS);
+    // PHP 8.1+ makes mysqli throw exceptions by default on connect failure.
+    // Switch to manual error handling so our callers can inspect connect_error.
+    mysqli_report(MYSQLI_REPORT_OFF);
+
+    // Connect directly to the named database. On shared hosting (cPanel) the
+    // MySQL user is scoped to a single pre-created DB and has NO privilege
+    // to CREATE DATABASE — attempting to do so produces
+    //   "Access denied for user '...' to database '...'"
+    // which masks the real issue. So we never try to create; the DB must
+    // already exist (created in cPanel → MySQL Databases).
+    try {
+        $conn = @new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+    } catch (Throwable $e) {
+        die(json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]));
+    }
     if ($conn->connect_error) {
         die(json_encode(['success' => false, 'message' => 'Database connection failed: ' . $conn->connect_error]));
-    }
-
-    // Auto-create database if it doesn't exist
-    $conn->query("CREATE DATABASE IF NOT EXISTS `" . DB_NAME . "` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
-
-    // Now select it
-    if (!$conn->select_db(DB_NAME)) {
-        die(json_encode(['success' => false, 'message' => 'Could not select database. Please run setup.php first.']));
     }
 
     $conn->set_charset('utf8mb4');
