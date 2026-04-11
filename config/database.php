@@ -3,13 +3,29 @@
 // Zaga Technologies - Database Configuration (MySQLi)
 // ============================================================
 
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'zaga_db');
+// Load .env file if it exists (production should use real env vars)
+$envFile = __DIR__ . '/../.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        if (strpos($line, '=') === false) continue;
+        list($key, $val) = explode('=', $line, 2);
+        $key = trim($key);
+        $val = trim($val);
+        if (!getenv($key)) {
+            putenv("$key=$val");
+        }
+    }
+}
+
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') ?: '');
+define('DB_NAME', getenv('DB_NAME') ?: 'zaga_db');
 
 // Admin credentials
-define('ADMIN_DEFAULT_PASSWORD', 'ZagaAdmin2025!');
+define('ADMIN_DEFAULT_PASSWORD', getenv('ADMIN_DEFAULT_PASSWORD') ?: 'ZagaAdmin2025!');
 
 function getDbConnection() {
     // First connect without selecting a database to check/create it

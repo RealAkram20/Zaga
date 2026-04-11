@@ -25,6 +25,9 @@ if ($action === 'list' || $action === 'get') {
             $row['in_stock'] = intval($row['in_stock']);
             $row['discount'] = $row['discount'] ? intval($row['discount']) : null;
             $row['inStock'] = (bool)$row['in_stock'];
+            $row['creditAvailable'] = isset($row['credit_available']) ? (bool)intval($row['credit_available']) : true;
+            $row['defaultAPR'] = isset($row['default_apr']) ? floatval($row['default_apr']) : 0;
+            $row['creditTermsMonths'] = isset($row['credit_terms_months']) ? $row['credit_terms_months'] : '3,6';
             $products[] = $row;
         }
         $conn->close();
@@ -49,6 +52,9 @@ if ($action === 'list' || $action === 'get') {
             $product['original_price'] = $product['original_price'] ? floatval($product['original_price']) : null;
             $product['rating'] = floatval($product['rating']);
             $product['id'] = intval($product['id']);
+            $product['creditAvailable'] = isset($product['credit_available']) ? (bool)intval($product['credit_available']) : true;
+            $product['defaultAPR'] = isset($product['default_apr']) ? floatval($product['default_apr']) : 0;
+            $product['creditTermsMonths'] = isset($product['credit_terms_months']) ? $product['credit_terms_months'] : '3,6';
             echo json_encode(['success' => true, 'data' => $product]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Product not found']);
@@ -82,27 +88,47 @@ switch ($action) {
         $in_stock = $stock > 0 ? 1 : 0;
         $image = trim($_POST['image'] ?? '');
         $additional_images = trim($_POST['additional_images'] ?? '[]');
+        $credit_available = isset($_POST['credit_available']) ? intval($_POST['credit_available']) : 1;
+        $default_apr = floatval($_POST['default_apr'] ?? 0);
+        $credit_terms_months = trim($_POST['credit_terms_months'] ?? '3,6');
 
         if (empty($title) || $category_id <= 0) {
             echo json_encode(['success' => false, 'message' => 'Title and category are required']);
             break;
         }
 
-        // Handle image upload
+        // Handle image upload with validation
         if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+            $maxSize = 5 * 1024 * 1024; // 5MB
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $_FILES['image_file']['tmp_name']);
+            finfo_close($finfo);
+
+            if (!in_array($mimeType, $allowedTypes)) {
+                echo json_encode(['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, GIF, SVG, and WebP are allowed.']);
+                break;
+            }
+            if ($_FILES['image_file']['size'] > $maxSize) {
+                echo json_encode(['success' => false, 'message' => 'File too large. Maximum size is 5MB.']);
+                break;
+            }
+
             $uploadDir = __DIR__ . '/../uploads/';
-            $ext = pathinfo($_FILES['image_file']['name'], PATHINFO_EXTENSION);
-            $filename = 'product_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+            $ext = strtolower(pathinfo($_FILES['image_file']['name'], PATHINFO_EXTENSION));
+            $safeExt = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp']) ? $ext : 'jpg';
+            $filename = 'product_' . time() . '_' . rand(1000, 9999) . '.' . $safeExt;
             if (move_uploaded_file($_FILES['image_file']['tmp_name'], $uploadDir . $filename)) {
                 $image = 'uploads/' . $filename;
             }
         }
 
-        $stmt = $conn->prepare("INSERT INTO products (title, category_id, price, original_price, discount, rating, reviews, description, features, sku, warranty, in_stock, stock, image, additional_images) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param('siddiidssssisis',
+        $stmt = $conn->prepare("INSERT INTO products (title, category_id, price, original_price, discount, rating, reviews, description, features, sku, warranty, in_stock, stock, image, additional_images, credit_available, default_apr, credit_terms_months) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param('siddiidssssissiids',
             $title, $category_id, $price, $original_price, $discount,
             $rating, $reviews, $description, $features, $sku, $warranty,
-            $in_stock, $stock, $image, $additional_images
+            $in_stock, $stock, $image, $additional_images,
+            $credit_available, $default_apr, $credit_terms_months
         );
 
         if ($stmt->execute()) {
@@ -130,22 +156,35 @@ switch ($action) {
         $in_stock = $stock > 0 ? 1 : 0;
         $image = trim($_POST['image'] ?? '');
         $additional_images = trim($_POST['additional_images'] ?? '[]');
+        $credit_available = isset($_POST['credit_available']) ? intval($_POST['credit_available']) : 1;
+        $default_apr = floatval($_POST['default_apr'] ?? 0);
+        $credit_terms_months = trim($_POST['credit_terms_months'] ?? '3,6');
 
-        // Handle image upload
+        // Handle image upload with validation
         if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../uploads/';
-            $ext = pathinfo($_FILES['image_file']['name'], PATHINFO_EXTENSION);
-            $filename = 'product_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-            if (move_uploaded_file($_FILES['image_file']['tmp_name'], $uploadDir . $filename)) {
-                $image = 'uploads/' . $filename;
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+            $maxSize = 5 * 1024 * 1024;
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $_FILES['image_file']['tmp_name']);
+            finfo_close($finfo);
+
+            if (in_array($mimeType, $allowedTypes) && $_FILES['image_file']['size'] <= $maxSize) {
+                $uploadDir = __DIR__ . '/../uploads/';
+                $ext = strtolower(pathinfo($_FILES['image_file']['name'], PATHINFO_EXTENSION));
+                $safeExt = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp']) ? $ext : 'jpg';
+                $filename = 'product_' . time() . '_' . rand(1000, 9999) . '.' . $safeExt;
+                if (move_uploaded_file($_FILES['image_file']['tmp_name'], $uploadDir . $filename)) {
+                    $image = 'uploads/' . $filename;
+                }
             }
         }
 
-        $stmt = $conn->prepare("UPDATE products SET title=?, category_id=?, price=?, original_price=?, discount=?, rating=?, reviews=?, description=?, features=?, sku=?, warranty=?, in_stock=?, stock=?, image=?, additional_images=? WHERE id=?");
-        $stmt->bind_param('siddiidssssissi',
+        $stmt = $conn->prepare("UPDATE products SET title=?, category_id=?, price=?, original_price=?, discount=?, rating=?, reviews=?, description=?, features=?, sku=?, warranty=?, in_stock=?, stock=?, image=?, additional_images=?, credit_available=?, default_apr=?, credit_terms_months=? WHERE id=?");
+        $stmt->bind_param('siddiidsssssissidsi',
             $title, $category_id, $price, $original_price, $discount,
             $rating, $reviews, $description, $features, $sku, $warranty,
-            $in_stock, $stock, $image, $additional_images, $id
+            $in_stock, $stock, $image, $additional_images,
+            $credit_available, $default_apr, $credit_terms_months, $id
         );
 
         if ($stmt->execute()) {

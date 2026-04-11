@@ -3,7 +3,27 @@
  * Zaga Technologies - Database Setup Script
  * Run this file once to create the database and seed initial data.
  * URL: http://localhost/Zaga/setup.php
+ *
+ * SECURITY: This script should be removed or protected after initial setup.
  */
+
+// Block access in production - only allow if ALLOW_SETUP env var is set or running from CLI
+if (php_sapi_name() !== 'cli' && !getenv('ALLOW_SETUP')) {
+    // Check if database already exists and has tables - if so, block access
+    $testConn = @new mysqli('localhost', 'root', '');
+    if ($testConn && !$testConn->connect_error) {
+        $result = $testConn->query("SELECT COUNT(*) as cnt FROM information_schema.tables WHERE table_schema = 'zaga_db'");
+        if ($result) {
+            $row = $result->fetch_assoc();
+            if ($row['cnt'] > 0) {
+                $testConn->close();
+                http_response_code(403);
+                die('Setup has already been completed. Delete this file or set ALLOW_SETUP=1 to re-run.');
+            }
+        }
+        $testConn->close();
+    }
+}
 
 $host = 'localhost';
 $user = 'root';

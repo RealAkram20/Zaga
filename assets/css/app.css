@@ -1,0 +1,27 @@
+/* ==========================================================================
+   APP.CSS - Zaga Tech Credit Master Stylesheet
+
+   This file imports all modular CSS files in the correct cascade order.
+   Include ONLY this file in your HTML: <link rel="stylesheet" href="assets/css/app.css">
+   ========================================================================== */
+
+/* 1. Design Tokens & Custom Properties */
+@import url('variables.css');
+
+/* 2. Reset, Typography & Utility Classes */
+@import url('base.css');
+
+/* 3. Layout Components */
+@import url('header.css');
+@import url('footer.css');
+
+/* 4. Reusable UI Components */
+@import url('components.css');
+
+/* 5. Page-Specific Styles */
+@import url('pages/shop.css');
+@import url('pages/dashboard.css');
+@import url('pages/auth.css');
+
+/* 6. Responsive Overrides (must be last) */
+@import url('responsive.css');

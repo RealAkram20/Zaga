@@ -1,0 +1,295 @@
+/* ==========================================================================
+   FOOTER - 4-column layout with newsletter & social links
+   ========================================================================== */
+
+/* -----------------------------------------------------------------------
+   FOOTER WRAPPER
+   ----------------------------------------------------------------------- */
+.site-footer {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-inverse);
+  margin-top: var(--spacing-4xl);
+}
+
+/* -----------------------------------------------------------------------
+   NEWSLETTER SECTION
+   ----------------------------------------------------------------------- */
+.footer-newsletter {
+  background-color: var(--color-bg-darker);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.footer-newsletter .footer-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2xl);
+  padding-top: var(--spacing-3xl);
+  padding-bottom: var(--spacing-3xl);
+}
+
+.newsletter-text h3 {
+  font-size: var(--font-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-inverse);
+  margin-bottom: var(--spacing-xs);
+}
+
+.newsletter-text p {
+  font-size: var(--font-base);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.newsletter-form {
+  display: flex;
+  max-width: 420px;
+  width: 100%;
+}
+
+.newsletter-form input {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-base);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-right: none;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-inverse);
+  font-size: var(--font-base);
+  transition: border-color var(--transition-fast),
+              background-color var(--transition-fast);
+}
+
+.newsletter-form input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.newsletter-form input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.newsletter-form button {
+  padding: var(--spacing-md) var(--spacing-xl);
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  border: 1px solid var(--color-primary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-base);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--transition-fast);
+}
+
+.newsletter-form button:hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* -----------------------------------------------------------------------
+   MAIN FOOTER CONTENT - 4 Columns
+   ----------------------------------------------------------------------- */
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-4xl) var(--spacing-xl) var(--spacing-2xl);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: var(--spacing-3xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+/* Footer column (individual column) */
+.footer-col {
+  min-width: 0;
+}
+
+.footer-heading {
+  font-size: var(--font-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-inverse);
+  margin-bottom: var(--spacing-lg);
+  position: relative;
+  padding-bottom: var(--spacing-sm);
+}
+
+.footer-heading::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 30px;
+  height: 2px;
+  background-color: var(--color-primary);
+  border-radius: 1px;
+}
+
+/* Brand column description */
+.footer-brand-description {
+  font-size: var(--font-base);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Footer links */
+.footer-col ul li {
+  margin-bottom: var(--spacing-md);
+}
+
+.footer-col ul li a {
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  font-size: var(--font-base);
+  transition: color var(--transition-fast),
+              padding-left var(--transition-fast);
+  display: inline-block;
+}
+
+.footer-col ul li a:hover {
+  color: var(--color-primary-light);
+  padding-left: 4px;
+}
+
+/* Footer text (description, notes) */
+.footer-text {
+  font-size: var(--font-base);
+  color: rgba(255, 255, 255, 0.65);
+  line-height: var(--line-height-loose);
+  margin-bottom: var(--spacing-xs);
+}
+
+.footer-text-sm {
+  font-size: var(--font-sm);
+  margin-top: var(--spacing-md);
+}
+
+/* Footer contact info */
+.footer-col p {
+  font-size: var(--font-base);
+  color: rgba(255, 255, 255, 0.65);
+  line-height: var(--line-height-loose);
+  margin-bottom: var(--spacing-xs);
+}
+
+.footer-col p a {
+  color: var(--color-warning);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.footer-col p a:hover {
+  color: #fb923c;
+}
+
+/* Contact list items */
+.footer-contact li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-base);
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.footer-contact-icon {
+  flex-shrink: 0;
+  width: 18px;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+/* -----------------------------------------------------------------------
+   SOCIAL LINKS
+   ----------------------------------------------------------------------- */
+.footer-social {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-lg);
+}
+
+.footer-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--font-lg);
+  transition: background-color var(--transition-fast),
+              color var(--transition-fast),
+              transform var(--transition-fast);
+}
+
+.footer-social a:hover {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  transform: translateY(-2px);
+}
+
+/* -----------------------------------------------------------------------
+   FOOTER BOTTOM BAR
+   ----------------------------------------------------------------------- */
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: var(--spacing-lg) 0;
+}
+
+.footer-bottom .footer-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-base);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-xl);
+}
+
+.footer-copyright {
+  font-size: var(--font-sm);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.footer-bottom-links {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.footer-bottom-links a {
+  font-size: var(--font-sm);
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.footer-bottom-links a:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* -----------------------------------------------------------------------
+   PAYMENT METHODS (optional row in footer)
+   ----------------------------------------------------------------------- */
+.footer-payments {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-base);
+}
+
+.footer-payments img {
+  height: 24px;
+  opacity: 0.6;
+  filter: grayscale(100%) brightness(2);
+  transition: opacity var(--transition-fast);
+}
+
+.footer-payments img:hover {
+  opacity: 1;
+}

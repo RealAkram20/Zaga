@@ -87,27 +87,37 @@ switch ($action) {
         $instructor = trim($_POST['instructor'] ?? '');
         $credit_available = intval($_POST['credit_available'] ?? 1);
         $default_apr = floatval($_POST['default_apr'] ?? 0);
+        $credit_terms_months = trim($_POST['credit_terms_months'] ?? '3,6');
 
         if (empty($title) || empty($course_type)) {
             echo json_encode(['success' => false, 'message' => 'Title and course type are required']);
             break;
         }
 
-        // Handle image upload
+        // Handle image upload with validation
         if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../uploads/';
-            $ext = pathinfo($_FILES['image_file']['name'], PATHINFO_EXTENSION);
-            $filename = 'course_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-            if (move_uploaded_file($_FILES['image_file']['tmp_name'], $uploadDir . $filename)) {
-                $image = 'uploads/' . $filename;
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+            $maxSize = 5 * 1024 * 1024;
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $_FILES['image_file']['tmp_name']);
+            finfo_close($finfo);
+
+            if (in_array($mimeType, $allowedTypes) && $_FILES['image_file']['size'] <= $maxSize) {
+                $uploadDir = __DIR__ . '/../uploads/';
+                $ext = strtolower(pathinfo($_FILES['image_file']['name'], PATHINFO_EXTENSION));
+                $safeExt = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp']) ? $ext : 'jpg';
+                $filename = 'course_' . time() . '_' . rand(1000, 9999) . '.' . $safeExt;
+                if (move_uploaded_file($_FILES['image_file']['tmp_name'], $uploadDir . $filename)) {
+                    $image = 'uploads/' . $filename;
+                }
             }
         }
 
-        $stmt = $conn->prepare("INSERT INTO courses (course_type, title, price, description, duration, modules, lessons, level, icon, image, sku, rating, reviews, instructor, credit_available, default_apr) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param('ssdssiiisssdisid',
+        $stmt = $conn->prepare("INSERT INTO courses (course_type, title, price, description, duration, modules, lessons, level, icon, image, sku, rating, reviews, instructor, credit_available, default_apr, credit_terms_months) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param('ssdssiiisssdisids',
             $course_type, $title, $price, $description, $duration,
             $modules, $lessons, $level, $icon, $image, $sku,
-            $rating, $reviews, $instructor, $credit_available, $default_apr
+            $rating, $reviews, $instructor, $credit_available, $default_apr, $credit_terms_months
         );
 
         if ($stmt->execute()) {
@@ -136,22 +146,32 @@ switch ($action) {
         $instructor = trim($_POST['instructor'] ?? '');
         $credit_available = intval($_POST['credit_available'] ?? 1);
         $default_apr = floatval($_POST['default_apr'] ?? 0);
+        $credit_terms_months = trim($_POST['credit_terms_months'] ?? '3,6');
 
-        // Handle image upload
+        // Handle image upload with validation
         if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../uploads/';
-            $ext = pathinfo($_FILES['image_file']['name'], PATHINFO_EXTENSION);
-            $filename = 'course_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-            if (move_uploaded_file($_FILES['image_file']['tmp_name'], $uploadDir . $filename)) {
-                $image = 'uploads/' . $filename;
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+            $maxSize = 5 * 1024 * 1024;
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $_FILES['image_file']['tmp_name']);
+            finfo_close($finfo);
+
+            if (in_array($mimeType, $allowedTypes) && $_FILES['image_file']['size'] <= $maxSize) {
+                $uploadDir = __DIR__ . '/../uploads/';
+                $ext = strtolower(pathinfo($_FILES['image_file']['name'], PATHINFO_EXTENSION));
+                $safeExt = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp']) ? $ext : 'jpg';
+                $filename = 'course_' . time() . '_' . rand(1000, 9999) . '.' . $safeExt;
+                if (move_uploaded_file($_FILES['image_file']['tmp_name'], $uploadDir . $filename)) {
+                    $image = 'uploads/' . $filename;
+                }
             }
         }
 
-        $stmt = $conn->prepare("UPDATE courses SET course_type=?, title=?, price=?, description=?, duration=?, modules=?, lessons=?, level=?, icon=?, image=?, sku=?, rating=?, reviews=?, instructor=?, credit_available=?, default_apr=? WHERE id=?");
-        $stmt->bind_param('ssdssiiisssdisidi',
+        $stmt = $conn->prepare("UPDATE courses SET course_type=?, title=?, price=?, description=?, duration=?, modules=?, lessons=?, level=?, icon=?, image=?, sku=?, rating=?, reviews=?, instructor=?, credit_available=?, default_apr=?, credit_terms_months=? WHERE id=?");
+        $stmt->bind_param('ssdssiiisssdisidsi',
             $course_type, $title, $price, $description, $duration,
             $modules, $lessons, $level, $icon, $image, $sku,
-            $rating, $reviews, $instructor, $credit_available, $default_apr, $id
+            $rating, $reviews, $instructor, $credit_available, $default_apr, $credit_terms_months, $id
         );
 
         if ($stmt->execute()) {

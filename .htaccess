@@ -1,18 +1,84 @@
 RewriteEngine On
+
+# ---- Detect environment: set RewriteBase dynamically ----
+# For local dev use /Zaga/, for production root use /
 RewriteBase /Zaga/
+
+# ---- Security: block access to sensitive files/directories ----
+Options -Indexes
+
+<Files .env>
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files .env.example>
+    Order allow,deny
+    Deny from all
+</Files>
+
+<FilesMatch "\.(sql|sh|log|bak)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block direct access to config, database, includes directories
+RewriteRule ^config/ - [F,L]
+RewriteRule ^database/ - [F,L]
+RewriteRule ^includes/ - [F,L]
+RewriteRule ^\.env - [F,L]
+RewriteRule ^setup\.php$ - [F,L]
+RewriteRule ^migrate.*\.php$ - [F,L]
+
+# ---- HTTPS redirect (uncomment on live server) ----
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ---- Cache headers for static assets ----
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
 
 # If the request is for an existing file or directory, serve it directly
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Remove .html extension
-RewriteCond %{REQUEST_FILENAME}.html -f
-RewriteRule ^(.+)$ $1.html [L]
+# ---- Account routes ----
+RewriteRule ^account/?$ account/index.php [L]
+RewriteRule ^account/(.+)$ account/$1.php [L]
 
-# Remove .php extension
+# ---- Admin routes ----
+RewriteRule ^admin/?$ pages/admin/index.php [L]
+RewriteRule ^admin/(.+)$ pages/admin/$1.php [L]
+
+# ---- Course detail: /course/{slug} ----
+RewriteRule ^course/([a-zA-Z0-9_-]+)$ pages/course-detail.php?slug=$1 [L,QSA]
+
+# ---- Product detail: /product/{slug} ----
+RewriteRule ^product/([a-zA-Z0-9_-]+)$ pages/product-detail.php?slug=$1 [L,QSA]
+
+# ---- Frontend page routes ----
+RewriteRule ^shop$ pages/shop.php [L,QSA]
+RewriteRule ^product-detail$ pages/product-detail.php [L,QSA]
+RewriteRule ^cart$ pages/cart.php [L]
+RewriteRule ^checkout$ pages/checkout.php [L]
+RewriteRule ^about$ pages/about.php [L]
+RewriteRule ^courses$ pages/courses.php [L]
+RewriteRule ^order-history$ pages/order-history.php [L,QSA]
+RewriteRule ^payment-portal$ pages/payment-portal.php [L,QSA]
+
+# Try .php extension first
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.+)$ $1.php [L]
 
-# Default: serve index.html as homepage
-RewriteRule ^$ index.html [L]
+# Default: serve index.php as homepage
+DirectoryIndex index.php
+RewriteRule ^$ index.php [L]

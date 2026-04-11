@@ -1,7 +1,16 @@
+# Environment files (never commit credentials)
+.env
+.env.local
+
+# Uploaded files
 uploads/*.jpg
 uploads/*.jpeg
 uploads/*.png
 uploads/*.gif
 uploads/*.svg
+uploads/*.webp
 !uploads/.gitkeep
+!uploads/.htaccess
+
+# Archives
 zaga.zip

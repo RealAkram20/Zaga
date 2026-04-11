@@ -72,6 +72,13 @@
     loadCoursesFromDB();
 
     // ===== Utility functions used across pages =====
+
+    // HTML escaping to prevent XSS when injecting user data into DOM
+    window.escapeHtml = function (str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
+
     window.getStars = function (rating) {
         const full = Math.floor(rating);
         const half = rating - full >= 0.5;
@@ -105,24 +112,23 @@
     };
 
     // paymentPlan: null or { type: 'credit', months: 3|6 }
-    window.addToCart = function (productId, quantity = 1, paymentPlan = null) {
+    // replace: if true, set quantity instead of incrementing (used by Buy Now)
+    window.addToCart = function (productId, quantity = 1, paymentPlan = null, replace = false) {
         const prodId = Number(productId);
         let cart = getCart();
         let item = cart.find((c) => c.productId === prodId);
         const product = products.find((p) => p.id === prodId);
         if (!product) {
-            alert('Product not found');
+            if (typeof showToast === 'function') showToast('Product not found', 'error'); else console.warn('Product not found');
             return;
         }
         if (!item) {
             cart.push({ productId: prodId, quantity: Number(quantity || 1), paymentPlan: paymentPlan });
         } else {
-            // if existing item has same payment plan, just increment; otherwise store latest plan
-            item.quantity = item.quantity + Number(quantity || 1);
+            item.quantity = replace ? Number(quantity || 1) : item.quantity + Number(quantity || 1);
             if (paymentPlan) item.paymentPlan = paymentPlan;
         }
         saveCart(cart);
-        updateCartCount();
     };
 
     // Credit computation helper with optional interest support
@@ -235,8 +241,35 @@
         const cart = getCart();
         const count = cart.reduce((s, i) => s + (i.quantity || 0), 0);
         const elements = document.querySelectorAll('#cartCount');
-        elements.forEach((el) => (el.textContent = count));
+        elements.forEach(function (el) {
+            el.textContent = count;
+            if (count > 0) {
+                el.classList.add('has-items');
+            } else {
+                el.classList.remove('has-items');
+            }
+        });
     };
+
+    // Validate cart: remove items whose product no longer exists
+    window.validateCart = function () {
+        if (!window.products || window.products.length === 0) return;
+        const cart = getCart();
+        const validCart = cart.filter(function (item) {
+            if (item.type === 'course') return true;
+            return window.products.some(function (p) { return p.id === item.productId; });
+        });
+        if (validCart.length !== cart.length) {
+            saveCart(validCart);
+        } else {
+            updateCartCount();
+        }
+    };
+
+    // Run validation after products load
+    window.addEventListener('products-loaded', function () {
+        validateCart();
+    });
 
     // Keep cart count updated when other tabs modify localStorage
     window.addEventListener('storage', function (e) {
@@ -406,7 +439,7 @@
             const email = document.getElementById('signinEmail').value.trim();
             const name = document.getElementById('signinName').value.trim();
             if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-                alert('Please enter a valid email');
+                if (typeof showToast === 'function') showToast('Please enter a valid email', 'error'); else console.warn('Please enter a valid email');
                 return;
             }
             signInUser(email, name || null);
@@ -1000,3 +1033,169 @@ function initPrivacyModal() {
         link.setAttribute('role', 'button');
     });
 }
+
+// ============================================================
+// GLOBAL: Password Visibility Toggle
+// ============================================================
+window.togglePasswordVisibility = function(btn) {
+    var input = btn.parentElement.querySelector('input');
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '\u{1F648}';
+        btn.setAttribute('aria-label', 'Hide password');
+    } else {
+        input.type = 'password';
+        btn.textContent = '\u{1F441}';
+        btn.setAttribute('aria-label', 'Show password');
+    }
+};
+
+// ============================================================
+// GLOBAL: showPaymentChoice - Universal Credit System
+// Works for both products and courses
+// ============================================================
+window.showPaymentChoice = function(options) {
+    // options: { productId, quantity, onConfirm(paymentPlan|null), defaultToCredit, defaultAPR }
+    //   OR:    { item: {price, title, ...}, quantity, onConfirm(paymentPlan|null) }
+    if (document.getElementById('payment-choice-modal')) return;
+
+    // Determine price and credit availability - either from productId lookup or from options.item
+    var itemPrice = 0;
+    var itemTitle = '';
+    var creditAvailable = true;
+    if (options.item) {
+        itemPrice = options.item.price;
+        itemTitle = options.item.title || '';
+        creditAvailable = options.item.creditAvailable !== false;
+    } else if (options.productId) {
+        var product = products.find(function(p) { return p.id === options.productId; });
+        if (product) {
+            itemPrice = product.price;
+            itemTitle = product.title || '';
+            creditAvailable = product.creditAvailable !== false;
+        }
+    }
+
+    var totalAmount = itemPrice * (options.quantity || 1);
+
+    var creditLabel = creditAvailable
+        ? '<label style="display:block;padding:8px 0;cursor:pointer;"><input type="radio" name="payMethod" value="credit"> Buy on credit (20% deposit, remainder over months)</label>'
+        : '';
+
+    var modal = document.createElement('div');
+    modal.id = 'payment-choice-modal';
+    modal.innerHTML =
+        '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000;padding:20px;">' +
+        '<div style="background:white;padding:24px;border-radius:8px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;">' +
+            '<h3 style="margin:0 0 5px;">Choose Payment Method</h3>' +
+            (itemTitle ? '<p style="color:#64748b;font-size:13px;margin:0 0 15px;">' + itemTitle + '</p>' : '') +
+            '<div style="margin:10px 0;">' +
+                '<label style="display:block;padding:8px 0;cursor:pointer;"><input type="radio" name="payMethod" value="full" checked> Pay in full (UGX ' + totalAmount.toLocaleString() + ')</label>' +
+                creditLabel +
+            '</div>' +
+            '<div id="creditOptions" style="display:none;margin-top:12px;padding:14px;background:#f3f4f6;border-radius:5px;">' +
+                '<div style="margin-bottom:12px;">' +
+                    '<label style="font-weight:600;font-size:13px;">Payment Period: <select id="creditMonths" style="margin-left:8px;padding:6px;border:1px solid #cbd5e1;border-radius:4px;"><option value="3">3 Months</option><option value="6">6 Months</option></select></label>' +
+                '</div>' +
+                '<div style="margin-bottom:12px;">' +
+                    '<label style="font-weight:600;font-size:13px;">Annual Interest Rate:</label>' +
+                    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">' +
+                        '<label style="cursor:pointer;"><input type="radio" name="interestRate" value="0" checked> 0% (No Interest)</label>' +
+                        '<label style="cursor:pointer;"><input type="radio" name="interestRate" value="5"> 5% APR</label>' +
+                        '<label style="cursor:pointer;"><input type="radio" name="interestRate" value="9.99"> 9.99% APR</label>' +
+                        '<label style="cursor:pointer;"><input type="radio" name="interestRate" value="14.99"> 14.99% APR</label>' +
+                    '</div>' +
+                '</div>' +
+                '<div id="creditSummary" style="margin-top:12px;color:#374151;font-size:13px;background:white;padding:10px;border-radius:3px;border-left:3px solid #2563eb;"></div>' +
+            '</div>' +
+            '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:15px;">' +
+                '<button id="payCancel" class="btn-secondary" style="padding:8px 16px;">Cancel</button>' +
+                '<button id="payConfirm" class="btn-primary" style="padding:8px 16px;">Confirm</button>' +
+            '</div>' +
+        '</div>' +
+        '</div>';
+    document.body.appendChild(modal);
+
+    var radios = modal.querySelectorAll("input[name='payMethod']");
+    var creditOpts = modal.querySelector('#creditOptions');
+    var monthsSelect = modal.querySelector('#creditMonths');
+    var interestRadios = modal.querySelectorAll("input[name='interestRate']");
+    var creditSummary = modal.querySelector('#creditSummary');
+
+    function updateSummary() {
+        var months = Number(monthsSelect.value);
+        var interest = Number(modal.querySelector("input[name='interestRate']:checked").value);
+        var c = computeCredit(totalAmount, months, interest);
+
+        var interestText = '';
+        if (c.totalInterest > 0) {
+            interestText = '<br><strong>Total Interest:</strong> UGX ' + c.totalInterest.toFixed(2);
+        }
+
+        creditSummary.innerHTML =
+            '<strong>Deposit (Due Now):</strong> UGX ' + c.deposit.toFixed(2) + '<br>' +
+            '<strong>Monthly Payment:</strong> UGX ' + c.monthly.toFixed(2) + ' x ' + c.months + ' months<br>' +
+            '<strong>Total to Finance:</strong> UGX ' + c.remaining.toFixed(2) + interestText;
+    }
+
+    radios.forEach(function(r) {
+        r.addEventListener('change', function() {
+            if (this.value === 'credit') { creditOpts.style.display = 'block'; updateSummary(); }
+            else creditOpts.style.display = 'none';
+        });
+    });
+
+    monthsSelect.addEventListener('change', updateSummary);
+    interestRadios.forEach(function(r) { r.addEventListener('change', updateSummary); });
+
+    // If caller requested default to credit
+    if (options && options.defaultToCredit) {
+        var creditRadio = modal.querySelector("input[name='payMethod'][value='credit']");
+        if (creditRadio) {
+            creditRadio.checked = true;
+            creditOpts.style.display = 'block';
+            if (typeof options.defaultAPR !== 'undefined' && options.defaultAPR !== null) {
+                var aprRadio = modal.querySelector("input[name='interestRate'][value='" + options.defaultAPR + "']");
+                if (aprRadio) aprRadio.checked = true;
+            }
+            updateSummary();
+        }
+    }
+
+    modal.querySelector('#payCancel').onclick = function() { modal.remove(); };
+    modal.querySelector('#payConfirm').onclick = function() {
+        var selected = modal.querySelector("input[name='payMethod']:checked").value;
+        var plan = null;
+        if (selected === 'credit') {
+            plan = {
+                type: 'credit',
+                months: Number(monthsSelect.value),
+                interestRate: Number(modal.querySelector("input[name='interestRate']:checked").value)
+            };
+        }
+        options.onConfirm(plan);
+        modal.remove();
+    };
+};
+
+// ============================================================
+// GLOBAL: addCourseToCart - Universal course cart function
+// ============================================================
+window.addCourseToCart = function(courseId, quantity, paymentPlan, courseDataObj) {
+    var cart = getCart();
+    var item = cart.find(function(c) { return c.itemId === courseId && c.type === 'course'; });
+    if (!item) {
+        cart.push({
+            itemId: courseId,
+            type: 'course',
+            quantity: quantity || 1,
+            paymentPlan: paymentPlan,
+            courseData: courseDataObj
+        });
+    } else {
+        item.quantity = quantity || 1;
+        if (paymentPlan) item.paymentPlan = paymentPlan;
+    }
+    saveCart(cart);
+    updateCartCount();
+};
