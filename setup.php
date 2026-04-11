@@ -7,28 +7,13 @@
  * SECURITY: This script should be removed or protected after initial setup.
  */
 
-// Block access in production - only allow if ALLOW_SETUP env var is set or running from CLI
-if (php_sapi_name() !== 'cli' && !getenv('ALLOW_SETUP')) {
-    // Check if database already exists and has tables - if so, block access
-    $testConn = @new mysqli('localhost', 'root', '');
-    if ($testConn && !$testConn->connect_error) {
-        $result = $testConn->query("SELECT COUNT(*) as cnt FROM information_schema.tables WHERE table_schema = 'zaga_db'");
-        if ($result) {
-            $row = $result->fetch_assoc();
-            if ($row['cnt'] > 0) {
-                $testConn->close();
-                http_response_code(403);
-                die('Setup has already been completed. Delete this file or set ALLOW_SETUP=1 to re-run.');
-            }
-        }
-        $testConn->close();
-    }
-}
+// Load .env-backed credentials (same path every other script uses)
+require_once __DIR__ . '/config/database.php';
 
-$host = 'localhost';
-$user = 'root';
-$pass = '';
-$dbName = 'zaga_db';
+$host   = DB_HOST;
+$user   = DB_USER;
+$pass   = DB_PASS;
+$dbName = DB_NAME;
 
 echo "<html><head><title>Zaga DB Setup</title>
 <style>body{font-family:'Segoe UI',sans-serif;max-width:700px;margin:40px auto;padding:20px;background:#f8fafc;}
@@ -40,20 +25,19 @@ a.btn:hover{background:#1d4ed8;}
 </style></head><body>";
 echo "<h1>Zaga Technologies - Database Setup</h1>";
 
-// Step 1: Connect to MySQL
-$conn = new mysqli($host, $user, $pass);
+// Step 1: Connect to MySQL using .env credentials
+// On shared hosting (cPanel), the database is pre-created and the MySQL user
+// is scoped to it — so we connect directly to the target DB, we do NOT try
+// to CREATE DATABASE (that would require SUPER privileges we don't have).
+$conn = @new mysqli($host, $user, $pass, $dbName);
 if ($conn->connect_error) {
-    echo "<p class='err'>Connection failed: " . htmlspecialchars($conn->connect_error) . "</p>";
-    echo "<p>Make sure XAMPP MySQL is running.</p>";
-    echo "</body></html>";
+    echo "<div class='box'><p class='err'>Connection failed: " . htmlspecialchars($conn->connect_error) . "</p>";
+    echo "<p>Check your <code>.env</code> values for DB_HOST, DB_USER, DB_PASS, DB_NAME, and that the MySQL user is attached to the database in cPanel &rarr; MySQL Databases &rarr; Add User To Database.</p>";
+    echo "</div></body></html>";
     exit;
 }
-echo "<div class='box'><p class='ok'>Connected to MySQL server.</p>";
-
-// Step 2: Create database
-$conn->query("CREATE DATABASE IF NOT EXISTS `$dbName` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
-echo "<p class='ok'>Database '$dbName' created/verified.</p>";
-$conn->select_db($dbName);
+echo "<div class='box'><p class='ok'>Connected to MySQL database <strong>" . htmlspecialchars($dbName) . "</strong> as <strong>" . htmlspecialchars($user) . "</strong>.</p>";
+$conn->set_charset('utf8mb4');
 
 // Step 3: Read and execute SQL file
 $sqlFile = __DIR__ . '/database/zaga_db.sql';
@@ -96,20 +80,20 @@ if (empty($errors)) {
 }
 echo "</div>";
 
-// Step 4: Hash the admin password properly
+// Step 4: Hash the admin password from .env (ADMIN_DEFAULT_PASSWORD)
 echo "<h2>Admin Account Setup</h2><div class='box'>";
-$hash = password_hash('ZagaAdmin2025!', PASSWORD_DEFAULT);
+$adminPlain = defined('ADMIN_DEFAULT_PASSWORD') ? ADMIN_DEFAULT_PASSWORD : 'ZagaAdmin2025!';
+$hash = password_hash($adminPlain, PASSWORD_DEFAULT);
 $stmt = $conn->prepare("UPDATE admin_users SET password = ? WHERE username = 'admin'");
 if ($stmt) {
     $stmt->bind_param('s', $hash);
     $stmt->execute();
     $stmt->close();
-    echo "<p class='ok'>Admin password hashed securely.</p>";
+    echo "<p class='ok'>Admin password hashed securely from ADMIN_DEFAULT_PASSWORD in .env.</p>";
     echo "<p>Username: <strong>admin</strong></p>";
-    echo "<p>Password: <strong>ZagaAdmin2025!</strong></p>";
+    echo "<p class='err'>Log in once, then change this password immediately via the admin Profile page.</p>";
 } else {
-    // admin_users may not exist yet if multi_query hasn't flushed
-    echo "<p>Admin password will be set on first login.</p>";
+    echo "<p>admin_users table not ready yet — re-run this script once the schema is created.</p>";
 }
 echo "</div>";
 
@@ -130,7 +114,7 @@ $conn->close();
 
 echo "<h2>Setup Complete!</h2>";
 echo "<p>You can now use the system:</p>";
-echo "<a class='btn' href='index.html'>Go to Homepage</a> ";
-echo "<a class='btn' href='admin.php' style='background:#16a34a;'>Go to Admin Panel</a>";
+echo "<a class='btn' href='index.php'>Go to Homepage</a> ";
+echo "<a class='btn' href='admin/login' style='background:#16a34a;'>Go to Admin Panel</a>";
 echo "<p style='margin-top:20px;color:#94a3b8;font-size:13px;'>You can delete this setup.php file after setup is complete.</p>";
 echo "</body></html>";
