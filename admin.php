@@ -1,7 +1,7 @@
 <?php
 // Redirect to the new modular admin panel
-session_start();
-header('Location: /Zaga/admin');
+require_once __DIR__ . '/includes/config.php';
+header('Location: ' . SITE_URL . '/admin');
 exit;
 ?>
 <?php /* Legacy admin panel below - preserved as backup */ ?>
