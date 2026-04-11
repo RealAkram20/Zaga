@@ -620,7 +620,7 @@
    HERO SECTION
    ----------------------------------------------------------------------- */
 .hero {
-  background-image: url('/Zaga/images/bk.jpg');
+  background-image: url('../../../images/bk.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

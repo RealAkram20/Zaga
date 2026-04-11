@@ -71,7 +71,7 @@ function notify_new_order(string $orderNumber, string $customerName, string $cus
             <tr><td style=\"padding:10px 0;font-weight:600;\">Payment</td><td style=\"padding:10px 0;\">{$methodLabel}</td></tr>
         </table>
         <div style=\"text-align:center;margin-top:20px;\">
-            <a href=\"" . htmlspecialchars((isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/Zaga/admin/orders') . "\" style=\"display:inline-block;background:#2563eb;color:white;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;\">View Orders</a>
+            <a href=\"" . htmlspecialchars((isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . SITE_URL . '/admin/orders') . "\" style=\"display:inline-block;background:#2563eb;color:white;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;\">View Orders</a>
         </div>
     ");
     send_email(get_admin_email(), 'New Order: ' . $orderNumber, $adminBody);
@@ -151,7 +151,7 @@ function notify_new_signup(string $customerName, string $customerEmail, string $
             " . ($phone ? "<tr><td style=\"padding:10px 0;font-weight:600;\">Phone</td><td style=\"padding:10px 0;\">" . htmlspecialchars($phone) . "</td></tr>" : "") . "
         </table>
         <div style=\"text-align:center;margin-top:20px;\">
-            <a href=\"" . htmlspecialchars((isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/Zaga/admin/customers') . "\" style=\"display:inline-block;background:#2563eb;color:white;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;\">View Customers</a>
+            <a href=\"" . htmlspecialchars((isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . SITE_URL . '/admin/customers') . "\" style=\"display:inline-block;background:#2563eb;color:white;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;\">View Customers</a>
         </div>
     ");
     send_email(get_admin_email(), 'New Customer: ' . $customerName, $body);

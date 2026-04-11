@@ -51,9 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     set_flash('success', 'Welcome back, ' . $customer['name'] . '!');
 
-    // Redirect to intended page or dashboard
+    // Redirect to intended page or dashboard — only allow same-site redirects
     $redirect = $_GET['redirect'] ?? $_POST['redirect'] ?? '';
-    if (!empty($redirect) && strpos($redirect, '/Zaga/') === 0) {
+    $basePrefix = SITE_URL === '' ? '/' : SITE_URL . '/';
+    if (!empty($redirect) && strpos($redirect, $basePrefix) === 0 && strpos($redirect, '//') === false) {
         redirect($redirect);
     }
     redirect(SITE_URL . '/account');
