@@ -140,6 +140,45 @@ function notify_payment_reminder(string $orderNumber, string $customerName, stri
 }
 
 /**
+ * Send a payment receipt to the customer after admin records a
+ * credit installment. Shows what was just paid and how much is still
+ * outstanding so they always have a paper trail.
+ */
+function notify_payment_received(
+    string $orderNumber,
+    string $customerName,
+    string $customerEmail,
+    float $amountPaid,
+    float $totalPaidSoFar,
+    float $totalDue
+): void {
+    if (empty($customerEmail)) return;
+
+    $remaining = max(0, $totalDue - $totalPaidSoFar);
+    $fmt = fn(float $n) => 'UGX ' . number_format($n, 0);
+    $paidLabel      = $fmt($amountPaid);
+    $totalPaidLabel = $fmt($totalPaidSoFar);
+    $remainingLabel = $fmt($remaining);
+    $paidOnLabel    = date('F j, Y');
+
+    $body = email_template('Payment Received', "
+        <p>Hello <strong>" . htmlspecialchars($customerName) . "</strong>,</p>
+        <p>We have received your payment. Thank you!</p>
+        <table style=\"width:100%;border-collapse:collapse;margin:16px 0;\">
+            <tr style=\"border-bottom:1px solid #e2e8f0;\"><td style=\"padding:10px 0;font-weight:600;width:160px;\">Order #</td><td style=\"padding:10px 0;\">" . htmlspecialchars($orderNumber) . "</td></tr>
+            <tr style=\"border-bottom:1px solid #e2e8f0;\"><td style=\"padding:10px 0;font-weight:600;\">Amount Paid</td><td style=\"padding:10px 0;font-weight:600;color:#059669;\">{$paidLabel}</td></tr>
+            <tr style=\"border-bottom:1px solid #e2e8f0;\"><td style=\"padding:10px 0;font-weight:600;\">Paid On</td><td style=\"padding:10px 0;\">{$paidOnLabel}</td></tr>
+            <tr style=\"border-bottom:1px solid #e2e8f0;\"><td style=\"padding:10px 0;font-weight:600;\">Total Paid So Far</td><td style=\"padding:10px 0;\">{$totalPaidLabel}</td></tr>
+            <tr><td style=\"padding:10px 0;font-weight:600;\">Outstanding Balance</td><td style=\"padding:10px 0;font-weight:600;color:" . ($remaining > 0 ? '#dc2626' : '#059669') . ";\">{$remainingLabel}</td></tr>
+        </table>
+        " . ($remaining > 0
+            ? "<p style=\"color:#64748b;font-size:14px;\">This receipt is for your records. You will receive another reminder one day before your next installment is due.</p>"
+            : "<p style=\"color:#166534;font-weight:600;\">Your credit plan is now fully paid. Thank you for choosing Zaga Technologies!</p>") . "
+    ");
+    send_email($customerEmail, 'Payment Receipt: ' . $orderNumber, $body);
+}
+
+/**
  * Notify admin when a new customer registers.
  */
 function notify_new_signup(string $customerName, string $customerEmail, string $phone = ''): void {

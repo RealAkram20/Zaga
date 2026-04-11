@@ -350,6 +350,18 @@ switch ($action) {
         $scheduleJson = trim($_POST['schedule_json'] ?? '');
         $amount = floatval($_POST['amount'] ?? 0);
 
+        // Capture previous payments so we can tell what was just added
+        // (needed for the receipt email, since callers pass the full
+        // updated payments array, not a delta).
+        $stmtPrev = $conn->prepare("SELECT payments_made_json FROM orders WHERE id = ?");
+        $stmtPrev->bind_param('i', $id);
+        $stmtPrev->execute();
+        $prevRow = $stmtPrev->get_result()->fetch_assoc();
+        $stmtPrev->close();
+        $prevPayments = json_decode($prevRow['payments_made_json'] ?? '[]', true) ?: [];
+        $prevTotal = 0;
+        foreach ($prevPayments as $p) $prevTotal += floatval($p['amount'] ?? 0);
+
         // Update payments_made_json and optionally schedule_json
         if (!empty($scheduleJson)) {
             $stmt = $conn->prepare("UPDATE orders SET payments_made_json = ?, schedule_json = ?, updated_at = NOW() WHERE id = ?");
@@ -373,14 +385,37 @@ switch ($action) {
             $deposit = floatval($orderData['total_now'] ?? 0);
             $fullTotal = floatval($orderData['total_full'] ?? 0);
 
+            // Delta actually recorded in this call. Prefer the explicit
+            // 'amount' the caller passed; fall back to the delta derived
+            // from the payments array when it's missing or zero.
+            $deltaPaid = $amount > 0 ? $amount : max(0, $totalPayments - $prevTotal);
+            $totalPaidIncludingDeposit = $deposit + $totalPayments;
+
+            $completed = false;
             if (($deposit + $totalPayments) >= $fullTotal) {
                 $stmtComplete = $conn->prepare("UPDATE orders SET status = 'completed', updated_at = NOW() WHERE id = ?");
                 $stmtComplete->bind_param('i', $id);
                 $stmtComplete->execute();
                 $stmtComplete->close();
+                $completed = true;
                 if (!empty($orderData['customer_email'])) {
                     try { notify_order_status($orderData['order_number'], $orderData['customer_name'], $orderData['customer_email'], 'completed'); } catch (Exception $e) {}
                 }
+            }
+
+            // Always send a payment receipt to the customer — partial or
+            // final — so they have a paper trail for every installment.
+            if ($deltaPaid > 0 && !empty($orderData['customer_email'])) {
+                try {
+                    notify_payment_received(
+                        $orderData['order_number'],
+                        $orderData['customer_name'],
+                        $orderData['customer_email'],
+                        $deltaPaid,
+                        $totalPaidIncludingDeposit,
+                        $fullTotal
+                    );
+                } catch (Exception $e) {}
             }
 
             echo json_encode(['success' => true, 'message' => 'Payment recorded successfully']);
@@ -480,6 +515,11 @@ switch ($action) {
 
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Order created successfully', 'data' => ['order_number' => $orderNumber, 'id' => $conn->insert_id]]);
+            // Email both admin and customer so an admin-recorded order still
+            // produces the same paper trail as a public checkout.
+            if (!empty($customerEmail)) {
+                try { notify_new_order($orderNumber, $customerName, $customerEmail, $totalNow, $paymentMethod); } catch (Exception $e) {}
+            }
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to create order: ' . $conn->error]);
         }
