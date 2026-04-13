@@ -1,6 +1,8 @@
 RewriteEngine On
 
-RewriteBase /
+# No RewriteBase needed — Apache automatically uses the directory containing
+# this .htaccess as the base. This means the same file works whether the
+# project is at the domain root (production) or in a subfolder (localhost/Zaga/).
 
 # ---- Strip /public prefix if someone accesses the site via /public/... ----
 RewriteCond %{THE_REQUEST} \s/public(/[^\s]*)? [NC]
