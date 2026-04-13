@@ -3,8 +3,11 @@
 -- MySQL Database Setup
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS zaga_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE zaga_db;
+-- NOTE: On shared hosting (cPanel), create the database via cPanel first,
+-- select it in phpMyAdmin, then import this file. The lines below are for
+-- local development only — comment them out if your host blocks CREATE DATABASE.
+-- CREATE DATABASE IF NOT EXISTS zaga_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+-- USE zaga_db;
 
 -- ============================================================
 -- 1. ADMIN USERS
