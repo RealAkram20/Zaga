@@ -85,7 +85,7 @@ window.showAppPrompt = function(title, message, defaultVal, onSubmit) {
 (function () {
     'use strict';
 
-    var SITE_URL = window.SITE_URL || '/Zaga';
+    var SITE_URL = window.SITE_URL || '';
     var CART_KEY = 'cart';
     var USER_KEY = 'zagatech_current_user';
 

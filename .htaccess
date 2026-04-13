@@ -1,8 +1,10 @@
 RewriteEngine On
 
-# ---- Detect environment: set RewriteBase dynamically ----
-# For local dev use /Zaga/, for production root use /
 RewriteBase /
+
+# ---- Strip /public prefix if someone accesses the site via /public/... ----
+RewriteCond %{THE_REQUEST} \s/public(/[^\s]*)? [NC]
+RewriteRule ^public(/.*)?$ $1 [R=301,L]
 
 # ---- Security: block access to sensitive files/directories ----
 Options -Indexes

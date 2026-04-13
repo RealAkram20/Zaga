@@ -3,7 +3,7 @@
 // Centralized JavaScript for all admin CRUD operations
 // ============================================================
 
-if (typeof window.SITE_URL === 'undefined') window.SITE_URL = '/Zaga';
+if (typeof window.SITE_URL === 'undefined') window.SITE_URL = '';
 
 // Ensure all fetch calls include session cookies and CSRF token
 (function() {

@@ -147,7 +147,7 @@ switch ($action) {
 
                 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
                 $host = $_SERVER['HTTP_HOST'];
-                $siteUrl = defined('SITE_URL') ? SITE_URL : '/Zaga';
+                $siteUrl = defined('SITE_URL') ? SITE_URL : '';
                 $resetLink = $protocol . '://' . $host . $siteUrl . '/admin/reset-password?token=' . $token . '&email=' . urlencode($email);
 
                 require_once __DIR__ . '/../includes/mailer.php';

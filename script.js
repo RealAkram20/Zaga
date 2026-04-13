@@ -303,12 +303,12 @@
     // ===== Navigation helpers =====
     window.viewProduct = function (id) {
         sessionStorage.setItem('productId', id);
-        window.location.href = '/Zaga/product-detail';
+        window.location.href = (window.SITE_URL || '') + '/product-detail';
     };
 
     window.viewProductDetail = function (id) {
         sessionStorage.setItem('productId', id);
-        window.location.href = '/Zaga/product-detail';
+        window.location.href = (window.SITE_URL || '') + '/product-detail';
     };
 
     // ===== Pagination helpers =====
@@ -385,7 +385,7 @@
             const user = getCurrentUser();
             if (user) {
                 const ordersLink = document.createElement('a');
-                ordersLink.href = '/Zaga/order-history';
+                ordersLink.href = (window.SITE_URL || '') + '/order-history';
                 ordersLink.textContent = 'My Orders';
                 ordersLink.className = 'nav-link';
 
