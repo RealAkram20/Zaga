@@ -22,6 +22,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit;
 }
+csrf_verify_request();
 
 $conn = getDbConnection();
 
@@ -87,7 +88,7 @@ switch ($action) {
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Testimonial added successfully', 'id' => $conn->insert_id]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to add testimonial: ' . $conn->error]);
+            echo json_encode(['success' => false, 'message' => 'Failed to add testimonial. Please try again.']);
         }
         $stmt->close();
         break;

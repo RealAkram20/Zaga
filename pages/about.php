@@ -12,7 +12,8 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
-    .about-img { width:100%; max-width:500px; height:auto; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+    /* ── shared ── */
+    .about-img { width:100%; height:auto; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); display:block; }
     .about-heading { margin-bottom:16px; color:var(--dark-text); font-size:28px; }
     .about-text { color:var(--dark-text); line-height:1.6; margin-bottom:16px; }
     .solutions-list { list-style:none; padding:0; color:var(--dark-text); line-height:1.8; font-size:16px; }
@@ -20,53 +21,75 @@ require_once __DIR__ . '/../includes/header.php';
     .contact-heading { color:#010e50; font-size:32px; margin-bottom:16px; }
     .contact-desc { color:#010e50; font-size:18px; margin-bottom:28px; }
     .testimonials-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; }
-    @media (max-width: 600px) {
+
+    /* ── two-column rows (desktop only) ── */
+    .two-col-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 56px;
+        align-items: center;
+    }
+
+    /* ── mobile: single column, keep existing stacked order ── */
+    @media (max-width: 768px) {
+        .two-col-row { display: block; }
+        .two-col-row .col-img  { margin-bottom: 20px; }
+        .two-col-row .col-text { margin-top: 0; }
         .about-heading { font-size:22px; }
         .about-text { font-size:14px; }
         .solutions-list { font-size:14px; }
         .contact-heading { font-size:24px; }
         .contact-desc { font-size:15px; }
         .testimonials-grid { grid-template-columns:1fr; }
-        .about-img { max-width:100%; }
     }
 </style>
 
-<!-- About Section with Image -->
-<section class="about-section" style="padding:40px 20px;background:#ffffff;">
+<!-- About Section — image LEFT, text RIGHT -->
+<section class="about-section" style="padding:56px 20px;background:#ffffff;">
     <div class="container" style="max-width:1200px;margin:0 auto;">
-        <div style="text-align:center;">
-            <img src="<?php echo SITE_URL; ?>/images/2.jpg" alt="Zaga Technologies" class="about-img">
-        </div>
-        <div style="margin-top:24px;">
-            <h2 class="about-heading">About</h2>
-            <p class="about-text">At Zaga Technologies Ltd, we
-                believe that access to cutting-edge technology should be within everyone's reach. Our credit
-                solutions are designed to empower individuals and businesses to acquire the latest tech products
-                without the immediate financial burden. With flexible payment plans and competitive interest
-                rates, we make it easier than ever to stay ahead in the digital age.</p>
-            <p class="about-text">We also bring you affordable
-                offline courses that
-                can be accessed immediately after purchasing or products.</p>
-            <p style="color:var(--dark-text);line-height:1.6;">Join us on a journey to unlock the potential of
-                technology through smart financing options tailored to your needs.</p>
+        <div class="two-col-row">
+            <!-- col 1: image -->
+            <div class="col-img">
+                <img src="<?php echo SITE_URL; ?>/images/2.jpg" alt="Zaga Technologies" class="about-img">
+            </div>
+            <!-- col 2: text -->
+            <div class="col-text">
+                <h2 class="about-heading">About</h2>
+                <p class="about-text">At Zaga Technologies Ltd, we
+                    believe that access to cutting-edge technology should be within everyone's reach. Our credit
+                    solutions are designed to empower individuals and businesses to acquire the latest tech products
+                    without the immediate financial burden. With flexible payment plans and competitive interest
+                    rates, we make it easier than ever to stay ahead in the digital age.</p>
+                <p class="about-text">We also bring you affordable
+                    offline courses that
+                    can be accessed immediately after purchasing our products.</p>
+                <p style="color:var(--dark-text);line-height:1.6;">Join us on a journey to unlock the potential of
+                    technology through smart financing options tailored to your needs.</p>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- Our Solutions Section with Image -->
-<section class="solutions-section" style="padding:40px 20px;background:#f8fafc;">
+<!-- Our Solutions Section — text LEFT, image RIGHT -->
+<section class="solutions-section" style="padding:56px 20px;background:#f8fafc;">
     <div class="container" style="max-width:1200px;margin:0 auto;">
-        <h2 class="about-heading">Our Solutions</h2>
-        <ul class="solutions-list">
-            <li>&#10003; Buy Now &amp; Pay later solution</li>
-            <li>&#10003; 3 - 6 Months Financing period</li>
-            <li>&#10003; Flexible Weekly &amp; monthly payments via mobile money</li>
-            <li>&#10003; Full ownership of the device after full payment</li>
-            <li>&#10003; Affordable high-quality computing devices.</li>
-            <li>&#10003; Affordable Offline Learning Courses.</li>
-        </ul>
-        <div style="text-align:center;margin-top:20px;">
-            <img src="<?php echo SITE_URL; ?>/images/1.jpg" alt="Our Solutions" class="about-img">
+        <div class="two-col-row">
+            <!-- col 1: text -->
+            <div class="col-text">
+                <h2 class="about-heading">Our Solutions</h2>
+                <ul class="solutions-list">
+                    <li>&#10003; Buy Now &amp; Pay later solution</li>
+                    <li>&#10003; 3 - 6 Months Financing period</li>
+                    <li>&#10003; Flexible Weekly &amp; monthly payments via mobile money</li>
+                    <li>&#10003; Full ownership of the device after full payment</li>
+                    <li>&#10003; Affordable high-quality computing devices.</li>
+                    <li>&#10003; Affordable Offline Learning Courses.</li>
+                </ul>
+            </div>
+            <!-- col 2: image -->
+            <div class="col-img">
+                <img src="<?php echo SITE_URL; ?>/images/1.jpg" alt="Our Solutions" class="about-img">
+            </div>
         </div>
     </div>
 </section>

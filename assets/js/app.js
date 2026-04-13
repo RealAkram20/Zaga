@@ -98,38 +98,56 @@ window.showAppPrompt = function(title, message, defaultVal, onSubmit) {
     window._productsLoaded = false;
     window._coursesLoaded = false;
 
-    /**
-     * Load products from the PHP/MySQL API and cache in window.products.
-     * Falls back to localStorage or generated data on failure.
-     */
+    var PRODUCTS_CACHE_KEY = 'zaga_products_v2';
+    var PRODUCTS_CACHE_TTL = 3 * 60 * 1000; // 3 minutes
+
+    window.clearProductsCache = function () {
+        try { localStorage.removeItem(PRODUCTS_CACHE_KEY); } catch (e) {}
+    };
+
     window.loadProductsFromDB = function () {
-        return fetch(SITE_URL + '/api/products.php?action=list')
-            .then(function (res) { return res.json(); })
+        return fetch(SITE_URL + '/api/products.php?action=list', { cache: 'no-store' })
+            .then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
             .then(function (data) {
-                if (data.success && data.data) {
-                    window.products = data.data.map(function (p) {
-                        p.inStock = p.in_stock == 1;
-                        p.additionalImages = (p.additional_images || []).map(function (img) {
-                            return (img && img.indexOf('http') !== 0 && img.indexOf('/') !== 0) ? SITE_URL + '/' + img : img;
-                        });
-                        if (p.image && p.image.indexOf('http') !== 0 && p.image.indexOf('/') !== 0) {
-                            p.image = SITE_URL + '/' + p.image;
-                        }
-                        return p;
+                if (!data.success || !data.data) throw new Error('Bad response');
+                window.products = data.data.map(function (p) {
+                    p.inStock = p.in_stock == 1;
+                    p.additionalImages = (p.additional_images || []).map(function (img) {
+                        return (img && img.indexOf('http') !== 0 && img.indexOf('/') !== 0) ? SITE_URL + '/' + img : img;
                     });
-                    window._productsLoaded = true;
-                    try { localStorage.setItem('products', JSON.stringify(window.products)); } catch (e) {}
-                    window.dispatchEvent(new CustomEvent('products-loaded'));
-                }
+                    if (p.image && p.image.indexOf('http') !== 0 && p.image.indexOf('/') !== 0) {
+                        p.image = SITE_URL + '/' + p.image;
+                    }
+                    return p;
+                });
+                try {
+                    localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: window.products }));
+                } catch (e) {}
+                window._productsLoaded = true;
+                window.dispatchEvent(new CustomEvent('products-loaded'));
             })
             .catch(function (err) {
-                console.warn('API fetch failed, falling back to localStorage/generated products', err);
-                var stored = localStorage.getItem('products');
-                if (stored) {
-                    try { window.products = JSON.parse(stored); } catch (e) { window.products = generateProducts(120); }
-                } else {
-                    window.products = generateProducts(120);
-                    localStorage.setItem('products', JSON.stringify(window.products));
+                console.warn('Products API unavailable, checking cache:', err);
+                try {
+                    var raw = localStorage.getItem(PRODUCTS_CACHE_KEY);
+                    if (raw) {
+                        var cached = JSON.parse(raw);
+                        if (cached && cached.data && (Date.now() - cached.ts) < PRODUCTS_CACHE_TTL) {
+                            window.products = cached.data;
+                            console.info('Serving products from unexpired cache (' + cached.data.length + ' items).');
+                        } else {
+                            localStorage.removeItem(PRODUCTS_CACHE_KEY);
+                            window.products = [];
+                            console.warn('Cache expired — products could not be loaded. Is the server running?');
+                        }
+                    } else {
+                        window.products = [];
+                    }
+                } catch (e) {
+                    window.products = [];
                 }
                 window._productsLoaded = true;
                 window.dispatchEvent(new CustomEvent('products-loaded'));

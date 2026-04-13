@@ -74,6 +74,18 @@ function csrf_verify(string $token = null): bool {
     return hash_equals($_SESSION['_csrf_token'], $token);
 }
 
+/**
+ * Validate CSRF on admin POST requests. Terminates with JSON error on failure.
+ */
+function csrf_verify_request(): void {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+    if (!csrf_verify($_POST['_csrf_token'] ?? '')) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Invalid security token. Please refresh the page.']);
+        exit;
+    }
+}
+
 // ============================================================
 // Redirect Helper
 // ============================================================

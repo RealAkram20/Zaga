@@ -12,5 +12,19 @@ uploads/*.webp
 !uploads/.gitkeep
 !uploads/.htaccess
 
+# Dependencies / framework artifacts (not part of this project)
+vendor/
+bootstrap/cache/
+
+# Claude Code session data
+.claude/
+
+# Runtime / generated storage
+storage/
+
+# SQLite dev database
+database/database.sqlite
+
 # Archives
 zaga.zip
+*.zip

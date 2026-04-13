@@ -67,6 +67,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit;
 }
+csrf_verify_request();
 
 $conn = getDbConnection();
 
@@ -123,7 +124,7 @@ switch ($action) {
         }
 
         $stmt = $conn->prepare("INSERT INTO products (title, category_id, price, original_price, discount, rating, reviews, description, features, sku, warranty, in_stock, stock, image, additional_images, credit_available, default_apr, credit_terms_months) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param('siddiidssssissiids',
+        $stmt->bind_param('siddidissssiissids',
             $title, $category_id, $price, $original_price, $discount,
             $rating, $reviews, $description, $features, $sku, $warranty,
             $in_stock, $stock, $image, $additional_images,
@@ -133,7 +134,7 @@ switch ($action) {
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Product added successfully', 'id' => $conn->insert_id]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to add product: ' . $conn->error]);
+            error_log('Failed to add product: ' . $conn->error); echo json_encode(['success' => false, 'message' => 'Failed to add product. Please try again.']);
         }
         $stmt->close();
         break;
@@ -179,7 +180,7 @@ switch ($action) {
         }
 
         $stmt = $conn->prepare("UPDATE products SET title=?, category_id=?, price=?, original_price=?, discount=?, rating=?, reviews=?, description=?, features=?, sku=?, warranty=?, in_stock=?, stock=?, image=?, additional_images=?, credit_available=?, default_apr=?, credit_terms_months=? WHERE id=?");
-        $stmt->bind_param('siddiidsssssissidsi',
+        $stmt->bind_param('siddidissssiissidsi',
             $title, $category_id, $price, $original_price, $discount,
             $rating, $reviews, $description, $features, $sku, $warranty,
             $in_stock, $stock, $image, $additional_images,
@@ -189,7 +190,7 @@ switch ($action) {
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Product updated successfully']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to update product: ' . $conn->error]);
+            error_log('Failed to update product: ' . $conn->error); echo json_encode(['success' => false, 'message' => 'Failed to update product. Please try again.']);
         }
         $stmt->close();
         break;

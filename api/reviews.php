@@ -37,6 +37,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit;
 }
+csrf_verify_request();
 
 $conn = getDbConnection();
 
@@ -142,7 +143,7 @@ switch ($action) {
             }
             echo json_encode(['success' => true, 'message' => 'Review added successfully']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to add review: ' . $conn->error]);
+            echo json_encode(['success' => false, 'message' => 'Failed to add review. Please try again.']);
         }
         $stmt->close();
         break;

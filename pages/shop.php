@@ -59,16 +59,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <div class="filter-section">
-            <h3>Sort By</h3>
-            <select id="sortBy" class="sort-select">
-                <option value="default">Default</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="rating">Rating: High to Low</option>
-                <option value="newest">Newest</option>
-            </select>
-        </div>
+        <!-- Sort moved to toolbar above products -->
 
         <button id="clearFilters" class="btn-clear-filters">Clear Filters</button>
     </aside>
@@ -77,7 +68,22 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="shop-main">
         <div class="shop-header">
             <h1>Shop All Products</h1>
-            <p id="productCount">Showing products</p>
+        </div>
+
+        <!-- Sort toolbar -->
+        <div class="sort-toolbar">
+            <span id="productCount" class="product-count-label">Showing products</span>
+            <div class="sort-toolbar-right">
+                <label for="sortBy" class="sort-label">Sort by:</label>
+                <select id="sortBy" class="sort-select-toolbar">
+                    <option value="newest" selected>Newest First</option>
+                    <option value="az">Name: A → Z</option>
+                    <option value="za">Name: Z → A</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="rating">Top Rated</option>
+                </select>
+            </div>
         </div>
 
         <div id="productsContainer" class="products-grid">
@@ -89,6 +95,63 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+
+<style>
+/* ── Sort toolbar ── */
+.sort-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.product-count-label {
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 500;
+}
+.sort-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sort-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    white-space: nowrap;
+}
+.sort-select-toolbar {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 7px 36px 7px 12px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 10px center;
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+    cursor: pointer;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    min-width: 170px;
+}
+.sort-select-toolbar:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+.sort-select-toolbar:hover { border-color: #2563eb; }
+
+@media (max-width: 600px) {
+    .sort-toolbar { padding: 8px 12px; }
+    .sort-select-toolbar { min-width: 140px; font-size: 13px; }
+}
+</style>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
 
@@ -155,7 +218,7 @@ require_once __DIR__ . '/../includes/header.php';
             checkbox.addEventListener('change', applyFilters);
         });
 
-        // Sort
+        // Sort toolbar
         document.getElementById('sortBy').addEventListener('change', applyFilters);
 
         // Clear filters
@@ -184,7 +247,13 @@ require_once __DIR__ . '/../includes/header.php';
         });
 
         // Apply sorting
-        if (sortBy === 'price-low') {
+        if (sortBy === 'newest') {
+            filteredProducts.sort(function(a, b) { return b.id - a.id; });
+        } else if (sortBy === 'az') {
+            filteredProducts.sort(function(a, b) { return a.title.localeCompare(b.title); });
+        } else if (sortBy === 'za') {
+            filteredProducts.sort(function(a, b) { return b.title.localeCompare(a.title); });
+        } else if (sortBy === 'price-low') {
             filteredProducts.sort(function(a, b) { return a.price - b.price; });
         } else if (sortBy === 'price-high') {
             filteredProducts.sort(function(a, b) { return b.price - a.price; });
@@ -200,7 +269,7 @@ require_once __DIR__ . '/../includes/header.php';
         var slider = document.getElementById('priceRange');
         slider.value = slider.max;
         document.getElementById('priceValue').textContent = Number(slider.max).toLocaleString();
-        document.getElementById('sortBy').value = 'default';
+        document.getElementById('sortBy').value = 'newest';
         var searchInput = document.getElementById('searchInput');
         if (searchInput) searchInput.value = '';
         filteredProducts = products.slice();

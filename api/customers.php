@@ -98,7 +98,7 @@ if ($action === 'register' || $action === 'login') {
                 $_SESSION['customer_email'] = $email;
                 echo json_encode(['success' => true, 'message' => 'Account created successfully', 'customer' => ['id' => $newId, 'name' => $name, 'email' => $email]]);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Registration failed: ' . $conn->error]);
+                echo json_encode(['success' => false, 'message' => 'Registration failed. Please try again.']);
             }
             $stmt->close();
         }
@@ -145,6 +145,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit;
 }
+csrf_verify_request();
 
 $conn = getDbConnection();
 
@@ -216,7 +217,7 @@ switch ($action) {
             if ($conn->errno === 1062) {
                 echo json_encode(['success' => false, 'message' => 'A customer with this email already exists']);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to add customer: ' . $conn->error]);
+                echo json_encode(['success' => false, 'message' => 'Failed to add customer. Please try again.']);
             }
         }
         $stmt->close();
@@ -246,7 +247,7 @@ switch ($action) {
             if ($conn->errno === 1062) {
                 echo json_encode(['success' => false, 'message' => 'A customer with this email already exists']);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to update customer: ' . $conn->error]);
+                echo json_encode(['success' => false, 'message' => 'Failed to update customer. Please try again.']);
             }
         }
         $stmt->close();

@@ -17,6 +17,29 @@ function validateCsrfToken($token) {
 
 $action = $_REQUEST['action'] ?? '';
 
+// ---- Login rate limiting helpers (file-based, 5 attempts / 15 min) ----
+function _login_cache_file(string $key): string {
+    $dir = __DIR__ . '/../storage/';
+    if (!is_dir($dir)) mkdir($dir, 0700, true);
+    return $dir . 'login_' . md5($key) . '.json';
+}
+function _login_attempts(string $key): array {
+    $file = _login_cache_file($key);
+    if (!file_exists($file)) return ['attempts' => 0, 'first' => time(), 'locked_until' => 0];
+    return json_decode(file_get_contents($file), true) ?: ['attempts' => 0, 'first' => time(), 'locked_until' => 0];
+}
+function _login_record_failure(string $key): void {
+    $data = _login_attempts($key);
+    if (time() - $data['first'] > 900) $data = ['attempts' => 0, 'first' => time(), 'locked_until' => 0];
+    $data['attempts']++;
+    if ($data['attempts'] >= 5) $data['locked_until'] = time() + 900;
+    file_put_contents(_login_cache_file($key), json_encode($data));
+}
+function _login_clear(string $key): void {
+    $file = _login_cache_file($key);
+    if (file_exists($file)) unlink($file);
+}
+
 switch ($action) {
     case 'login':
         $username = trim($_POST['username'] ?? '');
@@ -24,6 +47,16 @@ switch ($action) {
 
         if (empty($username) || empty($password)) {
             echo json_encode(['success' => false, 'message' => 'Username/email and password are required']);
+            exit;
+        }
+
+        // Rate limit by IP + username
+        $rlKey = ($_SERVER['REMOTE_ADDR'] ?? '') . '|' . strtolower($username);
+        $rlData = _login_attempts($rlKey);
+        if (time() - $rlData['first'] > 900) $rlData = ['attempts' => 0, 'first' => time(), 'locked_until' => 0];
+        if ($rlData['locked_until'] > time()) {
+            $wait = ceil(($rlData['locked_until'] - time()) / 60);
+            echo json_encode(['success' => false, 'message' => "Too many failed attempts. Try again in {$wait} minute(s)."]);
             exit;
         }
 
@@ -38,6 +71,7 @@ switch ($action) {
         $conn->close();
 
         if ($user && password_verify($password, $user['password'])) {
+            _login_clear($rlKey);
             session_regenerate_id(true);
             $_SESSION['admin_logged_in'] = true;
             $_SESSION['admin_id'] = $user['id'];
@@ -45,7 +79,11 @@ switch ($action) {
             $token = generateCsrfToken();
             echo json_encode(['success' => true, 'message' => 'Login successful', 'name' => $user['full_name'], 'csrf_token' => $token]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Invalid username or password']);
+            _login_record_failure($rlKey);
+            $remaining = max(0, 5 - (_login_attempts($rlKey)['attempts']));
+            $msg = 'Invalid username or password';
+            if ($remaining <= 2 && $remaining > 0) $msg .= ". {$remaining} attempt(s) remaining before lockout.";
+            echo json_encode(['success' => false, 'message' => $msg]);
         }
         break;
 
@@ -292,7 +330,7 @@ switch ($action) {
                 echo json_encode(['success' => true, 'message' => 'Account created successfully', 'customer' => ['id' => $newId, 'name' => $name, 'email' => $email]]);
                 try { notify_new_signup($name, $email, $phone); } catch (Exception $e) {}
             } else {
-                echo json_encode(['success' => false, 'message' => 'Registration failed: ' . $conn->error]);
+                echo json_encode(['success' => false, 'message' => 'Registration failed. Please try again.']);
             }
             $stmt->close();
         }

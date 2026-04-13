@@ -59,7 +59,7 @@ if ($action === 'create' || $action === 'track' || $action === 'customer_cancel'
             // Send notification emails
             try { notify_new_order($orderNumber, $customerName, $customerEmail, $totalNow, $paymentMethod); } catch (Exception $e) {}
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to create order: ' . $conn->error]);
+            echo json_encode(['success' => false, 'message' => 'Failed to create order. Please try again.']);
         }
         $stmt->close();
         $conn->close();
@@ -173,6 +173,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit;
 }
+csrf_verify_request();
 
 $conn = getDbConnection();
 
@@ -289,7 +290,7 @@ switch ($action) {
                 try { notify_order_status($orderNum, $customerName, $customerEmail, $status); } catch (Exception $e) {}
             }
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to update order: ' . $conn->error]);
+            echo json_encode(['success' => false, 'message' => 'Failed to update order. Please try again.']);
         }
         $stmt->close();
         break;
@@ -521,7 +522,7 @@ switch ($action) {
                 try { notify_new_order($orderNumber, $customerName, $customerEmail, $totalNow, $paymentMethod); } catch (Exception $e) {}
             }
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to create order: ' . $conn->error]);
+            echo json_encode(['success' => false, 'message' => 'Failed to create order. Please try again.']);
         }
         $stmt->close();
         break;

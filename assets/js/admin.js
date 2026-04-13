@@ -5,12 +5,15 @@
 
 if (typeof window.SITE_URL === 'undefined') window.SITE_URL = '/Zaga';
 
-// Ensure all fetch calls include session cookies
+// Ensure all fetch calls include session cookies and CSRF token
 (function() {
     const _origFetch = window.fetch.bind(window);
     window.fetch = function(url, opts) {
         opts = Object.assign({}, opts || {});
         if (!opts.credentials) opts.credentials = 'same-origin';
+        if (opts.method === 'POST' && opts.body instanceof FormData && window._csrfToken) {
+            opts.body.append('_csrf_token', window._csrfToken);
+        }
         return _origFetch(url, opts);
     };
 })();
@@ -325,6 +328,11 @@ function btnHtml(text, color, onclick) {
     return `<button onclick="${onclick}" title="${escapeHtml(text)}" style="padding:5px 8px;background:${bg};color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:3px;line-height:1;">${icon}<span class="btn-label">${escapeHtml(text)}</span></button>`;
 }
 
+function tableError(tbodyId, colspan, msg) {
+    const tbody = document.getElementById(tbodyId);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center;padding:20px;color:#ef4444;">${escapeHtml(msg)}</td></tr>`;
+}
+
 /** Wrap multiple btnHtml buttons in a flex container */
 function actionCell(...buttons) {
     return `<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">${buttons.join('')}</div>`;
@@ -615,6 +623,7 @@ function openAddProductModal() {
             if (json.success) {
                 showToast(json.message || 'Product added successfully');
                 removeModal('productModal');
+                if (window.clearProductsCache) window.clearProductsCache();
                 await loadProducts();
             } else {
                 showToast(json.message || 'Failed to add product', 'error');
@@ -692,6 +701,7 @@ async function openEditProductModal(id) {
                 if (json2.success) {
                     showToast(json2.message || 'Product updated successfully');
                     removeModal('productModal');
+                    if (window.clearProductsCache) window.clearProductsCache();
                     await loadProducts();
                 } else {
                     showToast(json2.message || 'Failed to update product', 'error');
@@ -715,6 +725,7 @@ async function deleteProduct(id) {
         const json = await res.json();
         if (json.success) {
             showToast(json.message || 'Product deleted');
+            if (window.clearProductsCache) window.clearProductsCache();
             await loadProducts();
         } else {
             showToast(json.message || 'Failed to delete product', 'error');
@@ -1681,11 +1692,15 @@ async function loadReviews() {
     try {
         const res = await fetch(API.reviews + '?action=list_all', { cache: 'no-store' });
         const json = await res.json();
-        if (!json.success) return;
+        if (!json.success) {
+            tableError('reviewsTableBody', 8, 'Failed to load reviews: ' + (json.message || 'Unknown error'));
+            return;
+        }
         allReviews = json.data;
         renderReviewsTable(allReviews);
     } catch (err) {
         console.error('Reviews load error:', err);
+        tableError('reviewsTableBody', 8, 'Failed to load reviews. Check console for details.');
     }
 }
 
@@ -1935,11 +1950,15 @@ async function loadTestimonials() {
     try {
         const res = await fetch(API.testimonials + '?action=list_all', { cache: 'no-store' });
         const json = await res.json();
-        if (!json.success) return;
+        if (!json.success) {
+            tableError('testimonialsTableBody', 9, 'Failed to load testimonials: ' + (json.message || 'Unknown error'));
+            return;
+        }
         allTestimonials = json.data;
         renderTestimonialsTable(allTestimonials);
     } catch (err) {
         console.error('Testimonials load error:', err);
+        tableError('testimonialsTableBody', 9, 'Failed to load testimonials. Check console for details.');
     }
 }
 

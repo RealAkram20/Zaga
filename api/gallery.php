@@ -7,6 +7,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit;
 }
+csrf_verify_request();
 
 $action = $_REQUEST['action'] ?? 'list';
 $uploadDir = __DIR__ . '/../uploads/';
@@ -211,6 +212,49 @@ switch ($action) {
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to delete file']);
         }
+        break;
+
+    case 'bulk_delete':
+        $paths = $_POST['paths'] ?? [];
+        if (empty($paths) || !is_array($paths)) {
+            echo json_encode(['success' => false, 'message' => 'No paths provided']);
+            break;
+        }
+
+        $deleted = 0;
+        $failed  = [];
+        $realUploads = realpath($uploadDir);
+        $realImages  = realpath($imagesDir);
+
+        foreach ($paths as $path) {
+            $path = trim($path);
+            if (empty($path)) continue;
+
+            $fullPath = __DIR__ . '/../' . $path;
+            $realPath = realpath($fullPath);
+
+            if ($realPath === false ||
+                (strpos($realPath, $realUploads) !== 0 && strpos($realPath, $realImages) !== 0)) {
+                $failed[] = basename($path);
+                continue;
+            }
+
+            if (unlink($realPath)) {
+                $deleted++;
+            } else {
+                $failed[] = basename($path);
+            }
+        }
+
+        $msg = $deleted . ' file(s) deleted';
+        if (!empty($failed)) $msg .= ', ' . count($failed) . ' failed';
+
+        echo json_encode([
+            'success' => $deleted > 0,
+            'message' => $msg,
+            'deleted' => $deleted,
+            'failed'  => $failed
+        ]);
         break;
 
     default:

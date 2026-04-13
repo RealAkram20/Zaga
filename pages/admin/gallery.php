@@ -23,6 +23,10 @@ require_once __DIR__ . '/sidebar.php';
       <!-- Toolbar -->
       <div class="admin-card" style="margin-bottom:var(--spacing-lg);padding:var(--spacing-base) var(--spacing-lg);">
         <div style="display:flex;gap:var(--spacing-base);align-items:center;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--font-sm);color:var(--color-text-base);white-space:nowrap;user-select:none;">
+            <input type="checkbox" id="gallerySelectAll" onchange="toggleSelectAll(this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:#2563eb;">
+            Select all
+          </label>
           <input type="text" id="gallerySearch" placeholder="Search images..." class="admin-input" style="flex:1;min-width:150px;max-width:300px;" oninput="filterGallery()">
           <select id="galleryDirFilter" class="admin-input" style="width:auto;" onchange="filterGallery()">
             <option value="all">All Folders</option>
@@ -44,6 +48,14 @@ require_once __DIR__ . '/sidebar.php';
         <div style="grid-column:1/-1;text-align:center;padding:var(--spacing-3xl);color:var(--color-text-muted);">Loading images...</div>
       </div>
 
+    </div>
+
+    <!-- Bulk action bar (appears when items are selected) -->
+    <div id="galleryBulkBar" style="display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:12px 18px;border-radius:14px;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,0.28);z-index:1000;white-space:nowrap;">
+      <span id="bulkSelectedCount" style="font-weight:600;font-size:var(--font-sm);padding-right:4px;"></span>
+      <button onclick="bulkCopyPaths()" style="padding:6px 14px;background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.18);border-radius:7px;cursor:pointer;font-size:var(--font-sm);font-weight:500;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">Copy Paths</button>
+      <button onclick="bulkDelete()" style="padding:6px 14px;background:#ef4444;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:var(--font-sm);font-weight:600;transition:background 0.15s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">Delete</button>
+      <button onclick="deselectAll()" title="Deselect all" style="padding:5px 9px;background:transparent;color:rgba(255,255,255,0.55);border:none;cursor:pointer;font-size:17px;line-height:1;transition:color 0.15s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.55)'">&#10005;</button>
     </div>
 
 <style>
@@ -147,6 +159,42 @@ require_once __DIR__ . '/sidebar.php';
   font-weight: var(--font-weight-semibold);
 }
 
+.gallery-item-checkbox {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 5;
+  accent-color: #2563eb;
+}
+
+.gallery-item:hover .gallery-item-checkbox,
+.gallery-item--selected .gallery-item-checkbox {
+  opacity: 1;
+}
+
+.gallery-item--selected {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.22);
+}
+
+.gallery-item--selected .gallery-item-img {
+  opacity: 0.82;
+}
+
+#galleryBulkBar {
+  animation: bulkBarIn 0.18s ease;
+}
+
+@keyframes bulkBarIn {
+  from { transform: translateX(-50%) translateY(14px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);   opacity: 1; }
+}
+
 /* Copy path tooltip */
 .gallery-item-path {
   position: absolute;
@@ -204,6 +252,7 @@ require_once __DIR__ . '/sidebar.php';
 <script>
 var GALLERY_API = '<?php echo SITE_URL; ?>/api/gallery.php';
 var allGalleryFiles = [];
+var selectedPaths = new Set();
 
 document.addEventListener('DOMContentLoaded', function() {
     loadGallery();
@@ -216,6 +265,8 @@ async function loadGallery() {
         var json = await res.json();
         if (json.success) {
             allGalleryFiles = json.data;
+            selectedPaths.clear();
+            updateBulkBar();
             filterGallery();
         }
     } catch (err) {
@@ -233,6 +284,7 @@ function filterGallery() {
     });
     document.getElementById('galleryCount').textContent = filtered.length + ' images';
     renderGallery(filtered);
+    updateSelectAllState();
 }
 
 function renderGallery(files) {
@@ -245,7 +297,11 @@ function renderGallery(files) {
     grid.innerHTML = files.map(function(f) {
         var sizeStr = f.size < 1024 ? f.size + ' B' : f.size < 1048576 ? (f.size / 1024).toFixed(0) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB';
         var imgUrl = '<?php echo SITE_URL; ?>/' + f.path;
-        return '<div class="gallery-item" title="' + escapeHtml(f.path) + '">' +
+        var isSelected = selectedPaths.has(f.path);
+        return '<div class="gallery-item' + (isSelected ? ' gallery-item--selected' : '') + '" title="' + escapeHtml(f.path) + '">' +
+            '<input type="checkbox" class="gallery-item-checkbox" data-path="' + escapeHtml(f.path) + '"' +
+                (isSelected ? ' checked' : '') +
+                ' onchange="toggleSelect(\'' + escapeHtml(f.path) + '\', this)">' +
             '<div class="gallery-item-actions">' +
                 '<button class="gallery-action-btn" title="Copy path" onclick="copyPath(\'' + escapeHtml(f.path) + '\', this)">' +
                     '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
@@ -338,6 +394,97 @@ async function uploadGalleryFiles(files) {
 
     // Reset the file input
     document.getElementById('galleryUploadInput').value = '';
+}
+
+function toggleSelect(path, el) {
+    var item = el.closest('.gallery-item');
+    if (el.checked) {
+        selectedPaths.add(path);
+        item.classList.add('gallery-item--selected');
+    } else {
+        selectedPaths.delete(path);
+        item.classList.remove('gallery-item--selected');
+    }
+    updateSelectAllState();
+    updateBulkBar();
+}
+
+function toggleSelectAll(checked) {
+    document.querySelectorAll('.gallery-item-checkbox').forEach(function(cb) {
+        cb.checked = checked;
+        var item = cb.closest('.gallery-item');
+        if (checked) {
+            selectedPaths.add(cb.dataset.path);
+            item.classList.add('gallery-item--selected');
+        } else {
+            selectedPaths.delete(cb.dataset.path);
+            item.classList.remove('gallery-item--selected');
+        }
+    });
+    updateBulkBar();
+}
+
+function deselectAll() {
+    selectedPaths.clear();
+    document.querySelectorAll('.gallery-item-checkbox').forEach(function(cb) {
+        cb.checked = false;
+        cb.closest('.gallery-item').classList.remove('gallery-item--selected');
+    });
+    var sa = document.getElementById('gallerySelectAll');
+    if (sa) { sa.checked = false; sa.indeterminate = false; }
+    updateBulkBar();
+}
+
+function updateSelectAllState() {
+    var all = document.querySelectorAll('.gallery-item-checkbox');
+    var sa = document.getElementById('gallerySelectAll');
+    if (!sa || all.length === 0) return;
+    var n = Array.from(all).filter(function(cb) { return cb.checked; }).length;
+    sa.indeterminate = n > 0 && n < all.length;
+    sa.checked = n > 0 && n === all.length;
+}
+
+function updateBulkBar() {
+    var bar = document.getElementById('galleryBulkBar');
+    if (!bar) return;
+    var n = selectedPaths.size;
+    if (n > 0) {
+        document.getElementById('bulkSelectedCount').textContent = n + ' selected';
+        bar.style.display = 'flex';
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+async function bulkDelete() {
+    var n = selectedPaths.size;
+    if (n === 0) return;
+    showConfirmModal(
+        'Delete ' + n + ' Image' + (n !== 1 ? 's' : ''),
+        'Delete ' + n + ' image' + (n !== 1 ? 's' : '') + '? This cannot be undone.',
+        'Delete',
+        async function() {
+            var fd = new FormData();
+            fd.append('action', 'bulk_delete');
+            selectedPaths.forEach(function(p) { fd.append('paths[]', p); });
+            try {
+                var res = await fetch(GALLERY_API, { method: 'POST', body: fd });
+                var json = await res.json();
+                showToast(json.message, json.success ? 'success' : 'error');
+                if (json.success) { selectedPaths.clear(); loadGallery(); }
+            } catch (err) {
+                showToast('Delete error: ' + err.message, 'error');
+            }
+        },
+        true
+    );
+}
+
+function bulkCopyPaths() {
+    var paths = Array.from(selectedPaths).join('\n');
+    navigator.clipboard.writeText(paths).then(function() {
+        showToast(selectedPaths.size + ' path(s) copied to clipboard');
+    });
 }
 
 function setupDragDrop() {
