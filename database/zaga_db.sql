@@ -3,6 +3,9 @@
 -- MySQL Database Setup
 -- ============================================================
 
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
 -- NOTE: On shared hosting (cPanel), create the database via cPanel first,
 -- select it in phpMyAdmin, then import this file. The lines below are for
 -- local development only — comment them out if your host blocks CREATE DATABASE.
@@ -19,7 +22,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -28,7 +31,7 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     expires_at DATETIME NOT NULL,
     used TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Default admin: username = admin, password = ZagaAdmin2025!
 INSERT INTO admin_users (username, password, full_name) VALUES
@@ -47,7 +50,7 @@ CREATE TABLE IF NOT EXISTS categories (
     status TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO categories (name, icon, description) VALUES
 ('Laptops', '💻', 'Portable computing devices for work and entertainment'),
@@ -83,7 +86,7 @@ CREATE TABLE IF NOT EXISTS products (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 5 products per category (30 total)
 INSERT INTO products (title, category_id, price, original_price, discount, rating, reviews, description, features, sku, warranty, in_stock, stock, image) VALUES
@@ -155,7 +158,7 @@ CREATE TABLE IF NOT EXISTS courses (
     credit_terms_months VARCHAR(50) DEFAULT '3,6',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Digital Skilling Courses
 INSERT INTO courses (course_type, title, price, description, duration, modules, lessons, level, icon, sku, rating, reviews, instructor, credit_available, default_apr) VALUES
@@ -188,7 +191,7 @@ CREATE TABLE IF NOT EXISTS customers (
     notes TEXT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
 -- 6. ORDERS
@@ -212,7 +215,7 @@ CREATE TABLE IF NOT EXISTS orders (
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
 -- 7. REVIEWS
@@ -230,7 +233,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
 -- 8. TESTIMONIALS
@@ -246,7 +249,7 @@ CREATE TABLE IF NOT EXISTS testimonials (
     display_order INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO testimonials (name, role, image, content, rating, status, display_order) VALUES
 ('Amina N.', 'Small business owner', 'images/user1.jpg', 'The credit option made it possible to upgrade my laptop without draining savings. The deposit was easy and payments were clear and they had excellent service.', 5, 1, 1),
