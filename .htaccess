@@ -2,7 +2,7 @@ RewriteEngine On
 
 # ---- Detect environment: set RewriteBase dynamically ----
 # For local dev use /Zaga/, for production root use /
-RewriteBase /Zaga/
+RewriteBase /
 
 # ---- Security: block access to sensitive files/directories ----
 Options -Indexes
@@ -30,7 +30,6 @@ RewriteRule ^storage/ - [F,L]
 RewriteRule ^bootstrap/ - [F,L]
 RewriteRule ^vendor/ - [F,L]
 RewriteRule ^\.env - [F,L]
-RewriteRule ^setup\.php$ - [F,L]
 RewriteRule ^migrate.*\.php$ - [F,L]
 
 # ---- HTTPS redirect (uncomment on live server) ----
