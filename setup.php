@@ -59,34 +59,36 @@ if (!file_exists($sqlFile)) {
 }
 
 $sql = file_get_contents($sqlFile);
-// Remove the CREATE DATABASE and USE lines since we already selected it
-$sql = preg_replace('/CREATE DATABASE.*?;/i', '', $sql);
+// Remove CREATE DATABASE and USE lines — shared hosting DB is pre-created
+$sql = preg_replace('/CREATE DATABASE\b[^;]*;/i', '', $sql);
 $sql = preg_replace('/USE\s+\w+\s*;/i', '', $sql);
 
-// Execute multi-query
-$conn->multi_query($sql);
+// Split into individual statements and execute one-by-one.
+// multi_query() stops silently on shared hosting after a few statements;
+// running each statement separately is reliable on all MySQL setups.
+$statements = array_filter(
+    array_map('trim', explode(';', $sql)),
+    fn($s) => $s !== ''
+);
 
 $errors = [];
 $queryCount = 0;
-do {
-    if ($result = $conn->store_result()) {
-        $result->free();
-    }
+foreach ($statements as $statement) {
     $queryCount++;
-    if ($conn->errno) {
-        // Ignore "table already exists" and "duplicate entry" errors
-        if ($conn->errno !== 1062 && $conn->errno !== 1050) {
-            $errors[] = "Query $queryCount: " . $conn->error;
+    if (!$conn->query($statement)) {
+        // Ignore "table already exists" (1050) and "duplicate entry" (1062)
+        if ($conn->errno !== 1050 && $conn->errno !== 1062) {
+            $errors[] = "Statement $queryCount: " . htmlspecialchars($conn->error);
         }
     }
-} while ($conn->more_results() && $conn->next_result());
+}
 
 if (empty($errors)) {
-    echo "<p class='ok'>All tables created and seeded successfully ($queryCount queries executed).</p>";
+    echo "<p class='ok'>All tables created and seeded successfully ($queryCount statements executed).</p>";
 } else {
-    echo "<p class='ok'>Tables created with some notes:</p><ul>";
+    echo "<p class='ok'>Setup completed with some notes ($queryCount statements):</p><ul>";
     foreach ($errors as $e) {
-        echo "<li class='err'>" . htmlspecialchars($e) . "</li>";
+        echo "<li class='err'>$e</li>";
     }
     echo "</ul>";
 }
